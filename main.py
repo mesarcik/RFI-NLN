@@ -1,0 +1,38 @@
+import numpy as np 
+import tensorflow as tf
+from data import *
+from utils import cmd_input 
+from architectures import *  
+
+def main():
+    """
+        Reads data and cmd arguments and trains models
+    """
+
+    if cmd_input.args.data == 'HERA':
+        data  = load_hera(cmd_input.args)
+
+    elif cmd_input.args.data == 'LOFAR':
+        data  = load_lofar(cmd_input.args)
+
+
+    (train_dataset,train_images, train_masks,train_labels,test_images,test_labels, test_masks) = data
+
+
+    print(" __________________________________ \n Anomaly class {}".format(
+                                               cmd_input.args.anomaly_class))
+    print(" __________________________________ \n Latent dimensionality {}".format(
+                                               cmd_input.args.latent_dim))
+    print(" __________________________________ \n Save name {}".format(
+                                               cmd_input.args.model_name))
+    print(" __________________________________ \n")
+
+    train_unet(train_dataset,train_images,train_labels, train_masks,test_images,test_labels, test_masks, cmd_input.args)
+    #train_ae(train_dataset,train_images,train_labels,test_images,test_labels, test_masks, cmd_input.args)
+    #train_dae(train_dataset,train_images,train_labels,test_images,test_labels, test_masks, cmd_input.args)
+    #train_ganomaly(train_dataset,train_images,train_labels,test_images,test_labels,test_masks, cmd_input.args)
+    #train_vae(train_dataset,train_images,train_labels,test_images,test_labels, test_masks, cmd_input.args)
+    #train_aae(train_dataset,train_images,train_labels,test_images,test_labels, test_masks, cmd_input.args)
+
+if __name__ == '__main__':
+    main()
