@@ -61,7 +61,7 @@ def main(train_dataset,train_images,train_labels,train_masks,test_images,test_la
     unet= UNET()
 
     unet = train(unet,train_dataset, train_images, train_masks,test_images,test_labels,test_masks,args)
-    #end_routine(train_images, test_images, test_labels, test_masks, [unet], 'UNET', args)
+    end_routine(train_images, test_images, test_labels, test_masks, [unet], 'UNET', args)
 
     
 if __name__  == '__main__':

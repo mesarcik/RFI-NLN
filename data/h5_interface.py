@@ -89,7 +89,7 @@ def restructure_cube(cube,sap):
     return vis 
 
 def get_random_batches(cube,flag):
-    idx = random.randint(cube.shape[0],size = 100)
+    idx = random.randint(cube.shape[0],size = 256)
     return cube[idx,:],flag[idx,:]
 
 def get_processed_cube(file_name, core = 'None',verbose = True):

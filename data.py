@@ -65,12 +65,12 @@ def load_hera(args):
     train_dataset = tf.data.Dataset.from_tensor_slices(train_data).shuffle(BUFFER_SIZE).batch(BATCH_SIZE)
     return (train_dataset,train_data, train_labels, test_data, test_labels, test_masks)
 
-def load_lofar(args):            
+def load_lofar(args, path):            
     """
         Load data from lofar 
 
     """
-    [train_data, train_labels, train_masks, test_data, test_labels, test_masks] = np.load(args.data_path, allow_pickle=True)
+    [train_data, train_labels, train_masks, test_data, test_labels, test_masks] = np.load(path, allow_pickle=True)
     _train_labels = np.array(['normal']*len(train_labels),dtype='str')
     _test_labels = np.array(['normal']*len(test_labels),dtype='str')
 

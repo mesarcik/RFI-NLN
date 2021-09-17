@@ -19,14 +19,15 @@ do
 								  -epochs $epochs \
 								  -latent_dim $ld \
 								  -data LOFAR\
-								  -data_path /data/mmesarcik/LOFAR/LOFAR_training_data/datasets/LOFAR_UNET_dataset_15-09-2021.pkl\
+								  -data_path pathnotinuse\
 								  -neighbors 1 2 5 10 16 20\
 								  -algorithm knn\
 								  -seed $d$seed | tee -a lofar.log 
 		done
 done 
 
-python report.py -data LOFAR\
-				 -seed $d$seed\
-				 -anomaly_type $atype\
-				 -data_path /data/mmesarcik/LOFAR/LOFAR_training_data/datasets/LOFAR_dataset_14-09-2021.pkl
+#TODO
+#python report.py -data LOFAR\
+#				 -seed $d$seed\
+#				 -anomaly_type $atype\
+#				 -data_path /data/mmesarcik/LOFAR/LOFAR_training_data/datasets/LOFAR_dataset_14-09-2021.pkl
