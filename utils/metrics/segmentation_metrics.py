@@ -21,8 +21,6 @@ def accuracy_metrics(model,
                      test_labels,
                      test_masks,
                      model_type,
-                     max_neighbours,
-                     max_radius,
                      args):
 
     """
@@ -52,6 +50,7 @@ def accuracy_metrics(model,
         seg_iou_nln (float32): iou score for nln
     """
     # Get output from model #TODO: do we want to normalise?
+    d = {}
     z = infer(model[0].encoder, train_images, args, 'encoder')
     z_query = infer(model[0].encoder, test_images, args, 'encoder')
 
@@ -102,61 +101,10 @@ def accuracy_metrics(model,
         else: nln_error_recon = nln_error
         
 
-        error_agg =  np.mean(nln_error_recon ,axis=tuple(range(1,nln_error_recon.ndim)))
-        cl_auc_nln , normal_accuracy_nln, anomalous_accuracy_nln = get_acc(args.anomaly_class,labels_recon, error_agg)
-        iou_nln = -1#iou_score(nln_error_recon, masks_recon)
-        seg_iou_nlns.append(iou_nln)
-
         seg_auc_nln,seg_prc_nln = get_segmentation(nln_error_recon, masks_recon, labels_recon, args)
-        seg_auc_nlns.append(seg_auc_nln)
-        seg_prc_nlns.append(seg_prc_nln)
+        d[n] = [seg_auc_nln, nln_error_recon]
+    return d 
 
-        dists_recon = get_dists(neighbours_dist, args)
-
-        dists = np.max(dists_recon, axis = tuple(range(1,dists_recon.ndim)))
-        dists= roc_auc_score(labels_recon== args.anomaly_class, dists) 
-        if args.patches:
-            dists_seg,_ = get_segmentation(dists_recon, masks_recon, labels_recon, args)
-            seg_aucs_dist.append(dists_seg)
-        else:
-            seg_aucs_dist.append(-1)
-
-        dist_aucs.append(dists)
-
-        print('\nDists AUC = {}\n'.format(dists))
-
-
-    seg_auc_nln = max(seg_auc_nlns)
-    seg_prc_nln = max(seg_prc_nlns)
-    dists_auc = max(dist_aucs)
-    seg_dists_auc = max(seg_aucs_dist)
-    seg_iou_nln = max(seg_iou_nlns)
-
-    print('Max seg_auc neighbor= {}\nMax seg_prc neighbor={}\nMax dist_uac neighbor ={}\nMax seg_iou neigh={}'.format(
-                                                                                    args.neighbors[np.argmax(seg_auc_nlns)],
-                                                                                    args.neighbors[np.argmax(seg_prc_nlns)],
-                                                                                    args.neighbors[np.argmax(dist_aucs)],
-                                                                                    args.neighbors[np.argmax(seg_aucs_dist)],
-                                                                                    args.neighbors[np.argmax(seg_iou_nlns)],
-                                                                                    ))
-    with open("outputs/neighbour_results.csv", "a") as myfile:
-        myfile.write('{},{},{},{},{},{},{}\n'.format(model_type, 
-                                                     args.anomaly_class, 
-                                                     round(seg_auc_nln,3), 
-                                                     args.neighbors[np.argmax(seg_auc_nlns)],
-                                                     round(seg_prc_nln,3),
-                                                     args.neighbors[np.argmax(seg_prc_nlns)],
-                                                     round(dists_auc,3),
-                                                     args.neighbors[np.argmax(dist_aucs)],
-                                                     round(seg_dists_auc,3),
-                                                     args.neighbors[np.argmax(dist_aucs)],
-                                                     round(seg_iou_nln,3),
-                                                     args.neighbors[np.argmax(seg_iou_nlns)],
-                                                     ))
-
-    plot_neighs(test_images, test_labels, test_masks, x_hat, x_hat_train[neighbours_idx], neighbours_dist, model_type, args)
-    
-    return seg_auc, seg_auc_nln, dists_auc, seg_dists_auc, seg_prc, seg_prc_nln, seg_iou, seg_iou_nln
 
 def get_segmentation(error, test_masks, test_labels, args):
     """

@@ -8,7 +8,7 @@ seed=$(openssl rand -hex 3)
 d=$(date +'%m-%d-%Y-%I-%M_')
 atype=MISO
 
-for ld in 2 
+for ld in 128 
 do
 		for i in rfi 
 		do

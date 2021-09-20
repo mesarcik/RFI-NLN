@@ -65,7 +65,7 @@ def load_hera(args):
     train_dataset = tf.data.Dataset.from_tensor_slices(train_data).shuffle(BUFFER_SIZE).batch(BATCH_SIZE)
     return (train_dataset,train_data, train_labels, test_data, test_labels, test_masks)
 
-def load_lofar(args, path):            
+def load_lofar(args, path, unet=False):            
     """
         Load data from lofar 
 
@@ -90,4 +90,7 @@ def load_lofar(args, path):
     test_data = process(test_data, per_image=False)
 
     train_dataset = tf.data.Dataset.from_tensor_slices(train_data).shuffle(BUFFER_SIZE,seed=42).batch(BATCH_SIZE)
-    return (train_dataset,train_data, train_masks, train_labels, test_data, test_labels, test_masks)
+    if unet:
+        return (train_dataset,train_data, train_masks, train_labels, test_data, test_labels, test_masks)
+    else:
+        return (train_dataset,train_data, train_labels, test_data, test_labels, test_masks)

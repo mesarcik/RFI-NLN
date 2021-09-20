@@ -2,7 +2,6 @@ import tensorflow as tf
 import numpy as np
 import time
 from models import VAE
-from models_mvtec import VAE as VAE_MVTEC
 from utils.plotting  import  (generate_and_save_images,
                              generate_and_save_training,
                              save_training_curves)

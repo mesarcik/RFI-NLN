@@ -4,7 +4,6 @@ import time
 from models import (Discriminator_z, 
                    Autoencoder)
 
-from models_mvtec import Autoencoder as Autoencoder_MVTEC
 
 from utils.plotting  import  (generate_and_save_images,
                              generate_and_save_training,

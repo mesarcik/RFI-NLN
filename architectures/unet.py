@@ -3,7 +3,7 @@ import numpy as np
 from sklearn import neighbors
 from matplotlib import pyplot as plt
 import time
-from test_scripts.unet import get_unet as UNET 
+from models import UNET 
 
 from utils.plotting  import  (generate_and_save_images,
                              generate_and_save_training)

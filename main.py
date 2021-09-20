@@ -20,7 +20,7 @@ def main():
 
     elif cmd_input.args.data == 'LOFAR':
         path = 'data/datasets/LOFAR_AE_dataset_17-09-2021.pkl' 
-        ae_data  = load_lofar(cmd_input.args, path)
+        ae_data  = load_lofar(cmd_input.args, path, unet=False)
         (train_dataset,
          train_images, 
          train_labels,
@@ -28,7 +28,7 @@ def main():
          test_labels, test_masks) = ae_data
 
         path = 'data/datasets/LOFAR_UNET_dataset_17-09-2021.pkl' 
-        unet_data  = load_lofar(cmd_input.args, path)
+        unet_data  = load_lofar(cmd_input.args, path, unet=True)
         (unet_train_dataset,
             unet_train_images, 
             unet_train_masks,
