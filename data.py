@@ -12,58 +12,86 @@ from utils.data import (get_mvtec_images,
                         random_crop,
                         resize,
                         sizes)
-def load_hera(args):            
+def load_hera(args):
     """
         Load data from hera
 
     """
-    data, labels, masks, _ =  np.load(args.data_path, allow_pickle=True)
-    _labels = copy.deepcopy(labels)
-    for i,label in enumerate(labels):
+    unet_path = '/data/mmesarcik/hera/HERA_6_24-09-2021.pkl'
+    unet_data, unet_labels, unet_masks, _ =  np.load(unet_path, allow_pickle=True)
+
+    ae_path = '/data/mmesarcik/hera/HERA_0_24-09-2021_AE.pkl'
+    ae_data, ae_labels, ae_masks, _ =  np.load(ae_path, allow_pickle=True)
+
+    _unet_labels = copy.deepcopy(unet_labels)
+    for i,label in enumerate(unet_labels):
         if args.anomaly_class in label: 
-            _labels[i] = args.anomaly_class
+            _unet_labels[i] = args.anomaly_class
         else:
-            _labels[i] = 'normal'
-    labels = np.array(_labels)
+            _unet_labels[i] = 'normal'
+    unet_labels = np.array(_unet_labels)
+    ae_labels = np.array('normal'*len(ae_labels))
 
-    data = np.sqrt(data[...,0]**2 + data[...,1]**2)
-    data = np.expand_dims(data, axis=-1)
-    data = process(data, per_image=False)
-    masks = np.swapaxes(masks, 1,2)
-    masks = np.expand_dims(masks,axis=-1)
+    unet_data = np.sqrt(unet_data[...,0]**2 + unet_data[...,1]**2)
+    unet_data = np.expand_dims(unet_data, axis=-1)
+    mi,ma = np.min(unet_data), np.max(unet_data)
+    unet_data = (unet_data - mi)/(ma -mi)
+    unet_data = unet_data.astype('float32')
 
-    (train_data, test_data, 
-        train_labels, test_labels, 
-            train_masks, test_masks) = train_test_split(data, 
-                                                        labels, 
-                                                        masks,
-                                                        test_size=0.25, 
-                                                        random_state=42)
+    ae_data = np.sqrt(ae_data[...,0]**2 + ae_data[...,1]**2)
+    ae_data = np.expand_dims(ae_data, axis=-1)
+    ae_data = (ae_data - mi)/(ma -mi)
+    ae_data = ae_data.astype('float32')#process(ae_data, per_image=True)
 
-    if str(args.anomaly_class) is not None:
-        if args.anomaly_type == 'MISO':
-            indicies = np.argwhere(train_labels == str(args.anomaly_class))
+    unet_masks = np.swapaxes(unet_masks, 1,2)
+    unet_masks = np.expand_dims(unet_masks,axis=-1)
 
-            mask_train  = np.invert(train_labels == str(args.anomaly_class))
-        else: 
-            indicies = np.argwhere(train_labels != str(args.anomaly_class))
+    ae_masks = np.swapaxes(ae_masks, 1,2)
+    ae_masks = np.expand_dims(ae_masks,axis=-1)
 
-            mask_train  = train_labels == str(args.anomaly_class)
-
-        train_data= train_data[mask_train]
-        train_labels = train_labels[mask_train]
-        train_masks = train_masks[mask_train]
-
+    (unet_train_data, unet_test_data, 
+        unet_train_labels, unet_test_labels, 
+            unet_train_masks, unet_test_masks) = train_test_split(unet_data, 
+                                                                  unet_labels, 
+                                                                  unet_masks,
+                                                                  test_size=0.25, 
+                                                                  random_state=42)
+#    if str(args.anomaly_class) is not None:
+#        if args.anomaly_type == 'MISO':
+#            indicies = np.argwhere(train_labels == str(args.anomaly_class))
+#
+#            mask_train  = np.invert(train_labels == str(args.anomaly_class))
+#        else: 
+#            indicies = np.argwhere(train_labels != str(args.anomaly_class))
+#
+#            mask_train  = train_labels == str(args.anomaly_class)
+#
+#        train_data= train_data[mask_train]
+#        train_labels = train_labels[mask_train]
+#        train_masks = train_masks[mask_train]
+#
     if args.limit is not None:
-        train_data = train_data[:args.limit,...]
-        train_labels = train_labels[:args.limit,...]
-        train_masks = train_masks[:args.limit,...]
+        unet_train_data =   unet_train_data[:args.limit,...]
+        unet_train_labels = unet_train_labels[:args.limit,...]
+        unet_train_masks =  unet_train_masks[:args.limit,...]
 
-    print('Train data', np.unique(train_labels), train_labels.shape)
-    print('Test data', np.unique(test_labels), test_labels.shape)
+        ae_data = ae_data[:args.limit,...]
 
-    train_dataset = tf.data.Dataset.from_tensor_slices(train_data).shuffle(BUFFER_SIZE).batch(BATCH_SIZE)
-    return (train_dataset,train_data, train_labels, test_data, test_labels, test_masks)
+    unet_train_dataset = tf.data.Dataset.from_tensor_slices(unet_train_data).shuffle(BUFFER_SIZE).batch(BATCH_SIZE)
+
+    ae_train_dataset = tf.data.Dataset.from_tensor_slices(ae_data).shuffle(BUFFER_SIZE).batch(BATCH_SIZE)
+
+    return (unet_train_dataset,
+            ae_train_dataset,
+            unet_train_data, 
+            ae_data, 
+            unet_train_masks, 
+            ae_masks,
+            unet_train_labels,
+            ae_labels,
+            unet_test_data, 
+            unet_test_labels, 
+            unet_test_masks)
 
 def load_lofar(args, path, unet=False):            
     """

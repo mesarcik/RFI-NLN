@@ -10,7 +10,7 @@ atype=MISO
 
 for ld in 128 
 do
-		for i in rfi gains
+		for i in rfi 
 		do
 				python -u main.py -limit $limit \
 								  -anomaly_class $i \
@@ -19,11 +19,11 @@ do
 								  -epochs $epochs \
 								  -latent_dim $ld \
 								  -data HERA\
-								  -data_path /home/mmesarcik/data/HERA/HERA_7_13-09-2021.pkl\
+								  -data_path /data/mmesarcik/hera/HERA_6_24-09-2021.pkl\
 								  -neighbors 1 2 5 10 16 20\
 								  -algorithm knn\
 								  -seed $d$seed | tee -a hera.log 
 		done
 done 
 
-python report.py -data HERA -seed $d$seed -anomaly_type $atype
+#python report.py -data HERA -seed $d$seed -anomaly_type $atype

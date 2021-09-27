@@ -2,7 +2,7 @@
 echo "Logging for run_mnist.sh at time: $(date)." >> log.log
 
 limit=None 
-epochs=50
+epochs=100
 percentage=0.0
 seed=$(openssl rand -hex 3)
 d=$(date +'%m-%d-%Y-%I-%M_')

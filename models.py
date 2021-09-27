@@ -233,7 +233,7 @@ def conv2d_block(input_tensor, n_filters, kernel_size = 3, batchnorm = True):
 
 def UNET( n_filters = 16, dropout = 0.05, batchnorm = True):
     # Contracting Path
-    input_data = tf.keras.Input((128, 64,1),name='data') 
+    input_data = tf.keras.Input((64, 256, 1),name='data') 
     c1 = conv2d_block(input_data, n_filters * 1, kernel_size = 3, batchnorm = batchnorm)
     p1 = layers.MaxPooling2D((2, 2))(c1)
     p1 = layers.Dropout(dropout)(p1)

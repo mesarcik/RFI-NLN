@@ -55,7 +55,7 @@ parser.add_argument('-patch_stride_y', metavar='-psy', type=int,
                     help = 'y-dimension of strides of patches')
 
 args = parser.parse_args()
-args.model_name = new_name()
+args.model_name = 'outstanding-spiffy-crab-of-discussion' #new_name()
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = args.debug
 
 if args.data == 'MNIST' or args.data == 'FASHION_MNIST':
@@ -65,7 +65,7 @@ elif args.data == 'CIFAR10':
     args.input_shape =(32,32,3)
 
 elif args.data == 'HERA':
-    args.input_shape =(64,256,1)
+    args.input_shape =(64, 256,1)
 
 elif args.data == 'LOFAR':
     args.input_shape =(128,64,1)

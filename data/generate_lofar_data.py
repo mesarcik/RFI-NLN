@@ -25,8 +25,8 @@ def data_generator(args):
     """
     first_flag = False 
     df = pd.read_csv('lofar_data_summary')
-    train_names = list(df[df.Contamination ==0].Name)
-    test_names = list(df[df.Contamination > 0.2].Name)
+    train_names = list(df[(df.Contamination ==0) & (df.Channels>30) &(df.Times>30) & (df.Times <243)].Name)
+    test_names = list(df[(df.Contamination > 0.0) & (df.Channels>30) &(df.Times>30) & (df.Times <243)].Name)
 
     train_labels, test_labels = [], []
 
@@ -37,6 +37,10 @@ def data_generator(args):
         mag = np.sqrt(vis[...,0].real**2 + vis[...,0].imag**2)
         mag = np.expand_dims(mag,axis=-1)
         mag = tf.image.resize(mag, (128,64), method='area',antialias=False).numpy()
+
+        #phase = np.angle(vis[...,0])
+        #phase = np.expand_dims(phase,axis=-1)
+        #phase = tf.image.resize(phase, (128,64), method='area',antialias=False).numpy()
 
         if not first_flag:
             train_data = mag 
@@ -52,11 +56,16 @@ def data_generator(args):
         mag = np.sqrt(vis[...,0].real**2 + vis[...,0].imag**2)
         mag = np.expand_dims(mag,axis=-1)
         mag = tf.image.resize(mag, (128,64), method='area',antialias=False).numpy()
+
+        #phase = np.angle(vis[...,0])
+        #phase = np.expand_dims(phase,axis=-1)
+        #phase = tf.image.resize(phase, (128,64), method='area',antialias=False).numpy()
+
         flags = tf.image.resize(flags.astype('int'), (128,64), method='area',antialias=False).numpy().astype('bool')
         print(flags.any())
 
         if not first_flag:
-            test_data = mag 
+            test_data = mag
             test_masks = flags[...,0]
             first_flag = True
         else: 
@@ -66,18 +75,19 @@ def data_generator(args):
 
     test_labels, train_labels = np.array(test_labels), np.array(train_labels)
 
+    #TODO our broken masks may have to do with this split.
     (unet_train_data, unet_test_data, 
         unet_train_labels, unet_test_labels, 
             unet_train_masks, unet_test_masks) = train_test_split(test_data, 
                                                                   test_labels, 
                                                                   test_masks,
-                                                                  test_size=0.25, 
+                                                                  test_size=0.50, 
                                                                   random_state=42)
 
     if not os.path.exists('datasets'):
         os.mkdir('datasets')
 
-    UNET_name = 'datasets/LOFAR_UNET_dataset_{}.pkl'.format(datetime.datetime.now().strftime("%d-%m-%Y"))
+    UNET_name = 'datasets/LOFAR_UNET_dataset_{}_small.pkl'.format(datetime.datetime.now().strftime("%d-%m-%Y"))
     pickle.dump([unet_train_data, 
                  unet_train_labels, 
                  unet_train_masks, 
@@ -86,7 +96,7 @@ def data_generator(args):
                  unet_test_masks],open(UNET_name, 'wb'), protocol=4)
 
 
-    AE_name = 'datasets/LOFAR_AE_dataset_{}.pkl'.format(datetime.datetime.now().strftime("%d-%m-%Y"))
+    AE_name = 'datasets/LOFAR_AE_dataset_{}_small.pkl'.format(datetime.datetime.now().strftime("%d-%m-%Y"))
     pickle.dump([train_data, 
                  train_labels, 
                  np.empty([]), 
