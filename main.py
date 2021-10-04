@@ -25,22 +25,16 @@ def main():
 
 
     elif cmd_input.args.data == 'LOFAR':
-        path = 'data/datasets/LOFAR_AE_dataset_22-09-2021_small.pkl' 
-        ae_data  = load_lofar(cmd_input.args, path, unet=False)
-        (train_dataset,
-         train_data, 
-         train_labels,
-         test_data,
-         test_labels, test_masks) = ae_data
-
-        path = 'data/datasets/LOFAR_UNET_dataset_22-09-2021_small.pkl' 
-        unet_data  = load_lofar(cmd_input.args, path, unet=True)
         (unet_train_dataset,
-            unet_train_data, 
-            unet_train_masks,
-            unet_train_labels,
-            unet_test_data,
-            unet_test_labels, unet_test_masks) = unet_data
+            train_data, 
+            train_labels, 
+            train_masks, 
+            ae_train_dataset,
+            ae_train_data, 
+            ae_train_labels, 
+            test_data, 
+            test_labels, 
+            test_masks) = load_lofar(cmd_input.args)
 
 
     print(" __________________________________ \n Latent dimensionality {}".format(

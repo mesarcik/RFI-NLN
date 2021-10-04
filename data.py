@@ -145,32 +145,56 @@ def load_hera(args):
             unet_test_labels, 
             unet_test_masks)
 
-def load_lofar(args, path, unet=False):            
+def load_lofar(args):            
     """
         Load data from lofar 
 
     """
-    [train_data, train_labels, train_masks, test_data, test_labels, test_masks] = np.load(path, allow_pickle=True)
-    _train_labels = np.array(['normal']*len(train_labels),dtype='str')
-    _test_labels = np.array(['normal']*len(test_labels),dtype='str')
+    data, masks = np.load(path, allow_pickle=True)
+    data = resize(np.absolute(data[...,0]).astype('float32'), (sizes[args.anomaly_class], 
+                                                              sizes[args.anomaly_class])) #TODO 
+    masks = resize(masks[...,0], (sizes[args.anomaly_class], 
+                                  sizes[args.anomaly_class]))
 
-    for i,(_train_label,_test_label) in enumerate(zip(train_labels, test_labels)):
-        if _train_label:_train_labels[i] = args.anomaly_class
-        else:_train_labels[i] = 'normal'
-        if _test_label:_test_labels[i] = args.anomaly_class
-        else:_test_labels[i] = 'normal'
-    test_labels = np.array(_test_labels)
-    train_labels = np.array(_train_labels)
+
+    # TODO: determine where to place the normalisation
+    train_data = process(data, per_image=False)
+
+    labels = []
+    for mask in masks: 
+        if mask.any(): labels.append('rfi')
+        else: labels.append('normal')
 
     if args.limit is not None:
         train_data = train_data[:args.limit,...]
         train_labels = train_labels[:args.limit,...]
 
-    train_data = process(train_data, per_image=False)
-    test_data = process(test_data, per_image=False)
+    if args.patches:
+        p_size = (1,args.patch_x, args.patch_y, 1)
+        s_size = (1,args.patch_stride_x, args.patch_stride_y, 1)
+        rate = (1,1,1,1)
+        data_patches, labels_patches = get_patches(data, labels, p_size, s_size, rate, 'VALID')
+        mask_patches, _ = get_patches(masks, labels, p_size, s_size, rate, 'VALID')
 
-    train_dataset = tf.data.Dataset.from_tensor_slices(train_data).shuffle(BUFFER_SIZE,seed=42).batch(BATCH_SIZE)
-    if unet:
-        return (train_dataset,train_data, train_masks, train_labels, test_data, test_labels, test_masks)
-    else:
-        return (train_dataset,train_data, train_labels, test_data, test_labels, test_masks)
+        (train_data, test_data, 
+         train_labels,test_labels, 
+         train_masks, test_masks) = train_test_split(data_patches, 
+                                                     labels_patches, 
+                                                     mask_patches,
+                                                     test_size=0.25, 
+                                                     random_state=42)
+         ae_train_data  = train_data[np.any(train_masks, axis=0)]
+         ae_train_labels = train_labels[np.any(train_masks, axis=0)]
+
+    unet_train_dataset = tf.data.Dataset.from_tensor_slices(train_data).shuffle(BUFFER_SIZE,seed=42).batch(BATCH_SIZE)
+    ae_train_dataset = tf.data.Dataset.from_tensor_slices(ae_train_data).shuffle(BUFFER_SIZE,seed=42).batch(BATCH_SIZE)
+    return (unet_train_dataset,
+            train_data, 
+            train_labels, 
+            train_masks, 
+            ae_train_dataset,
+            ae_train_data, 
+            ae_train_labels, 
+            test_data, 
+            test_labels, 
+            test_masks)
