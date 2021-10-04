@@ -58,7 +58,7 @@ def train(unet,train_dataset,train_images, train_masks, test_images,test_labels,
     return unet
 
 def main(train_dataset,train_images,train_labels,train_masks,test_images,test_labels, test_masks,args):
-    unet= UNET()
+    unet= UNET(args)
 
     unet = train(unet,train_dataset, train_images, train_masks,test_images,test_labels,test_masks,args)
     end_routine(train_images, test_images, test_labels, test_masks, [unet], 'UNET', args)

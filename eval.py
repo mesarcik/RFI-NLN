@@ -15,12 +15,13 @@ from model_config import *
 #MODEL_NAME= 'benevolent-kickass-octopus-of-success'
 
 #HERA 
-MODEL_NAME = 'outstanding-spiffy-crab-of-discussion'#imposing-primitive-quokka-of-satiation'
+#MODEL_NAME = 'vigorous-unnatural-muskrat-of-storm'#imposing-primitive-quokka-of-satiation'
+MODEL_NAME = 'athletic-meteoric-pudu-from-shambhala'
 
-models = ['UNET', 'AE']#, 'DAE_disc', 'GANomaly','VAE', 'AAE']
+models = ['AE']#, 'DAE_disc', 'GANomaly','VAE', 'AAE']
 
 LD =128
-PATCH=128
+PATCH=64
 
 class Namespace:
      def __init__(self, **kwargs):
@@ -28,11 +29,11 @@ class Namespace:
      def set_class(self,clss):
          self.anomaly_class = clss
 
-args = Namespace(input_shape=(64, 256, 1),
+args = Namespace(input_shape=(64, 64, 1),
                  rotate=False,
                  crop=False,
                  epochs=-1,
-                 patches=False,
+                 patches=True,
                  percentage_anomaly=0,
                  limit= None,
                  patch_x = PATCH,
@@ -87,8 +88,6 @@ def main():
             model = Autoencoder(args)
             model.load_weights('outputs/{}/rfi/{}/training_checkpoints/checkpoint_full_model_ae'
                                  .format(model_type, MODEL_NAME))
-        if first_flag:
-            rs = np.random.randint(0, len(test_data), 10)
 
         x_hat  = infer(model, test_data, args, 'AE')
         if model_type == 'UNET':
@@ -110,6 +109,14 @@ def main():
             #        ind = key
             #    print(key, d[key][0])
             #error = d[ind][1]
+        
+        test_data = reconstruct(test_data, args)
+        x_hat = reconstruct(x_hat, args)
+        error = reconstruct(error, args)
+        test_masks = reconstruct(test_masks, args)
+
+        if first_flag:
+            rs = np.random.randint(0, len(x_hat), 10)
 
         fpr, tpr, thr  = metrics.roc_curve(test_masks.flatten(), error[...,0].flatten())
         threshold =thr[np.argmax(tpr-fpr)]

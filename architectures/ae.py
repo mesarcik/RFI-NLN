@@ -3,7 +3,7 @@ import numpy as np
 from sklearn import neighbors
 from matplotlib import pyplot as plt
 import time
-from models import  Autoencoder
+from models import Autoencoder
 
 from utils.plotting  import  (generate_and_save_images,
                              generate_and_save_training)
@@ -17,8 +17,7 @@ optimizer = tf.keras.optimizers.Adam()
 NNEIGHBOURS= 5
 
 def l2_loss(x,x_hat):
-
-    return bce(x,x_hat)
+    return mse(x,x_hat)
 
 @tf.function
 def train_step(model, x):

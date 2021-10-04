@@ -49,15 +49,15 @@ def main():
                                                cmd_input.args.model_name))
     print(" __________________________________ \n")
 
-#    train_unet(unet_train_dataset,
-#               unet_train_data,
-#               unet_train_labels, 
-#               unet_train_masks,
-#               unet_test_data,
-#               unet_test_labels, 
-#               unet_test_masks, 
-#               cmd_input.args)
-#
+    train_unet(unet_train_dataset,
+               unet_train_data,
+               unet_train_labels, 
+               unet_train_masks,
+               unet_test_data,
+               unet_test_labels, 
+               unet_test_masks, 
+               cmd_input.args)
+
     train_ae(ae_train_dataset,
              ae_train_data,
              ae_train_labels,

@@ -55,7 +55,7 @@ parser.add_argument('-patch_stride_y', metavar='-psy', type=int,
                     help = 'y-dimension of strides of patches')
 
 args = parser.parse_args()
-args.model_name = 'outstanding-spiffy-crab-of-discussion' #new_name()
+args.model_name = new_name()
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = args.debug
 
 if args.data == 'MNIST' or args.data == 'FASHION_MNIST':

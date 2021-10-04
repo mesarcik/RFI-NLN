@@ -43,7 +43,6 @@ def get_patched_dataset(train_images,
                                               rate,
                                               padding)
     if test_masks is not None:
-        test_masks = np.expand_dims(test_masks,axis=-1)
         test_masks_patches, _ = get_patches(test_masks,
                                            test_labels,
                                            p_size,
@@ -51,7 +50,7 @@ def get_patched_dataset(train_images,
                                            rate,
                                            padding)
 
-        return train_patches,train_labels_p,test_patches,test_labels_p,test_masks_patches[...,0]
+        return train_patches,train_labels_p,test_patches,test_labels_p,test_masks_patches
 
     else: #test_masks is None 
         return train_patches,train_labels_p,test_patches,test_labels_p

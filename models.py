@@ -14,10 +14,10 @@ class Encoder(tf.keras.layers.Layer):
         for n in range(n_layers):
             self.conv.append(layers.Conv2D(filters = n_filters, 
                                        kernel_size = (2,2), 
-                                       #strides = (2,2),
+                                       strides = (2,2),
                                        padding = 'same',
                                        activation='relu'))
-            self.pool.append(layers.MaxPooling2D(pool_size=(2,2),padding='same'))
+            #self.pool.append(layers.MaxPooling2D(pool_size=(2,2),padding='same'))
 
             self.batchnorm.append(layers.BatchNormalization())
 
@@ -34,8 +34,8 @@ class Encoder(tf.keras.layers.Layer):
 
         for layer in range(n_layers):
             x = self.conv[layer](x)
-            if layer !=n_layers-1:
-                x = self.pool[layer](x)
+            #if layer !=n_layers-1:
+            #    x = self.pool[layer](x)
             x = self.batchnorm[layer](x)
         x = self.flatten(x)
 
@@ -65,7 +65,7 @@ class Decoder(tf.keras.layers.Layer):
 
             self.conv.append(layers.Conv2DTranspose(filters = n_filters, 
                                                kernel_size = (2,2), 
-                                               #strides = (2,2),
+                                               strides = (2,2),
                                                padding = 'same',
                                                activation='relu'))
 
@@ -84,7 +84,7 @@ class Decoder(tf.keras.layers.Layer):
 
         for layer in range(n_layers -1):
             x = self.conv[layer](x)
-            x = self.pool[layer](x)
+            #x = self.pool[layer](x)
             x = self.batchnorm[layer](x)
         
         x = self.conv_output(x)
@@ -231,9 +231,9 @@ def conv2d_block(input_tensor, n_filters, kernel_size = 3, batchnorm = True):
     
     return x
 
-def UNET( n_filters = 16, dropout = 0.05, batchnorm = True):
+def UNET(args, n_filters = 16, dropout = 0.05, batchnorm = True):
     # Contracting Path
-    input_data = tf.keras.Input((64, 256, 1),name='data') 
+    input_data = tf.keras.Input(args.input_shape,name='data') 
     c1 = conv2d_block(input_data, n_filters * 1, kernel_size = 3, batchnorm = batchnorm)
     p1 = layers.MaxPooling2D((2, 2))(c1)
     p1 = layers.Dropout(dropout)(p1)
