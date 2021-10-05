@@ -150,20 +150,16 @@ def load_lofar(args):
         Load data from lofar 
 
     """
-    data, masks = np.load(path, allow_pickle=True)
-    data = resize(np.absolute(data[...,0]).astype('float32'), (sizes[args.anomaly_class], 
-                                                              sizes[args.anomaly_class])) #TODO 
-    masks = resize(masks[...,0], (sizes[args.anomaly_class], 
-                                  sizes[args.anomaly_class]))
+    data, masks = np.load(args.data_path, allow_pickle=True)
+    data = resize(np.absolute(data[...,0:1]).astype('float32'), (sizes[args.anomaly_class], 
+                                                                sizes[args.anomaly_class])) #TODO 
+    masks = resize(masks[...,0:1].astype('int'), (sizes[args.anomaly_class], 
+                                  sizes[args.anomaly_class])).astype('bool')
 
 
     # TODO: determine where to place the normalisation
     train_data = process(data, per_image=False)
 
-    labels = []
-    for mask in masks: 
-        if mask.any(): labels.append('rfi')
-        else: labels.append('normal')
 
     if args.limit is not None:
         train_data = train_data[:args.limit,...]
@@ -173,18 +169,24 @@ def load_lofar(args):
         p_size = (1,args.patch_x, args.patch_y, 1)
         s_size = (1,args.patch_stride_x, args.patch_stride_y, 1)
         rate = (1,1,1,1)
-        data_patches, labels_patches = get_patches(data, labels, p_size, s_size, rate, 'VALID')
-        mask_patches, _ = get_patches(masks, labels, p_size, s_size, rate, 'VALID')
+
+        data_patches = get_patches(data, None, p_size,s_size,rate,'VALID')
+        mask_patches = get_patches(masks, None, p_size,s_size,rate,'VALID')
+
+        labels = np.empty(len(data_patches), dtype='object')
+        labels[np.any(mask_patches, axis=(1,2,3))] = 'rfi'
+        labels[np.invert(np.any(mask_patches, axis=(1,2,3)))] = 'normal'
 
         (train_data, test_data, 
          train_labels,test_labels, 
          train_masks, test_masks) = train_test_split(data_patches, 
-                                                     labels_patches, 
+                                                     labels, 
                                                      mask_patches,
                                                      test_size=0.25, 
                                                      random_state=42)
-         ae_train_data  = train_data[np.any(train_masks, axis=0)]
-         ae_train_labels = train_labels[np.any(train_masks, axis=0)]
+
+        ae_train_data  = train_data[np.invert(np.any(train_masks, axis=(1,2,3)))]
+        ae_train_labels = train_labels[np.invert(np.any(train_masks, axis=(1,2,3)))]
 
     unet_train_dataset = tf.data.Dataset.from_tensor_slices(train_data).shuffle(BUFFER_SIZE,seed=42).batch(BATCH_SIZE)
     ae_train_dataset = tf.data.Dataset.from_tensor_slices(ae_train_data).shuffle(BUFFER_SIZE,seed=42).batch(BATCH_SIZE)

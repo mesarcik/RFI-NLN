@@ -83,9 +83,11 @@ def get_patches(x,
                                   p_size[2],
                                   x.shape[-1]))
 
-    y_labels = np.array([[label]*x_out.shape[1]*x_out.shape[2] for label in y]).flatten()
-
-    return x_patches,y_labels
+    if y is not None:
+        y_labels = np.array([[label]*x_out.shape[1]*x_out.shape[2] for label in y]).flatten()
+        return x_patches,y_labels
+    else:
+        return x_patches
 
 def reconstruct(patches,args, labels=None):
     """

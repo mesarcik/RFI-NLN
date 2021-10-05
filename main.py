@@ -13,15 +13,15 @@ def main():
         data  = load_hera(cmd_input.args)
         (unet_train_dataset,
          ae_train_dataset,
-         unet_train_data, 
+         train_data, 
          ae_train_data, 
-         unet_train_masks, 
+         train_masks, 
          ae_train_masks,
-         unet_train_labels,
+         train_labels,
          ae_train_labels,
-         unet_test_data, 
-         unet_test_labels, 
-         unet_test_masks) = data
+         test_data, 
+         test_labels, 
+         test_masks) = data
 
 
     elif cmd_input.args.data == 'LOFAR':
@@ -44,20 +44,20 @@ def main():
     print(" __________________________________ \n")
 
     train_unet(unet_train_dataset,
-               unet_train_data,
-               unet_train_labels, 
-               unet_train_masks,
-               unet_test_data,
-               unet_test_labels, 
-               unet_test_masks, 
+               train_data,
+               train_labels, 
+               train_masks,
+               test_data,
+               test_labels, 
+               test_masks, 
                cmd_input.args)
 
     train_ae(ae_train_dataset,
              ae_train_data,
              ae_train_labels,
-             unet_test_data,
-             unet_test_labels, 
-             unet_test_masks, 
+             test_data,
+             test_labels, 
+             test_masks, 
              cmd_input.args)
     #train_dae(train_dataset,train_data,train_labels,test_data,test_labels, test_masks, cmd_input.args)
     #train_ganomaly(train_dataset,train_data,train_labels,test_data,test_labels,test_masks, cmd_input.args)
