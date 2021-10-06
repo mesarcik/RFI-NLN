@@ -88,6 +88,9 @@ def get_error(model_type,
     elif model_type == 'GANomaly':
         error = z- z_hat
 
+    elif model_type == 'UNET':
+        error = x_hat
+
     if ab:
         error = np.abs(error,dtype=np.float32)
 

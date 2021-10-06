@@ -19,11 +19,13 @@ def end_routine(train_images, test_images, test_labels, test_masks, model, model
     #                                                       model_type, 
     #                                                       args)
     
-    auc_recon = get_classifcation(model_type,
-                                  model,
-                                  test_images,
-                                  test_labels,
-                                  args)
+    if args.data !='LOFAR':
+        auc_recon = get_classifcation(model_type,
+                                      model,
+                                      test_images,
+                                      test_labels,
+                                      args)
+    else: auc_recon = 'n/a'
     if (args.data == 'MVTEC') or (args.data == 'HERA') or (args.data == 'LOFAR'):
         seg_auc, seg_auc_nln, seg_dists_auc = accuracy_metrics(model,
                                                                train_images,

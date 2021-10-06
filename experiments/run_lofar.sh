@@ -2,7 +2,7 @@
 echo "Logging for run_mnist.sh at time: $(date)." >> log.log
 
 limit=None 
-epochs=20
+epochs=100
 percentage=0.0
 seed=$(openssl rand -hex 3)
 d=$(date +'%m-%d-%Y-%I-%M_')
@@ -11,7 +11,7 @@ patch=64
 
 for ld in 128 
 do
-		for i in rfi 
+		for data in /home/mmesarcik/data/LOFAR/uncompressed/L629174_part_3.npy 
 		do
 				python -u main.py -limit $limit \
 								  -anomaly_class rfi\
@@ -27,7 +27,7 @@ do
 							      -patch_stride_x $patch \
 							      -patch_stride_y $patch \
 								  -data LOFAR\
-								  -data_path /home/mmesarcik/data/LOFAR/uncompressed/L652366.npy\
+								  -data_path $data\
 								  -neighbors 1 2 5 10 16 20\
 								  -algorithm knn\
 								  -seed $d$seed | tee -a lofar.log 

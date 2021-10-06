@@ -158,12 +158,12 @@ def load_lofar(args):
 
 
     # TODO: determine where to place the normalisation
-    train_data = process(data, per_image=False)
+    data = np.nan_to_num(np.log(data),nan=0)
+    data = process(data, per_image=False)
 
 
     if args.limit is not None:
-        train_data = train_data[:args.limit,...]
-        train_labels = train_labels[:args.limit,...]
+        data = data[:args.limit,...]
 
     if args.patches:
         p_size = (1,args.patch_x, args.patch_y, 1)
@@ -174,7 +174,7 @@ def load_lofar(args):
         mask_patches = get_patches(masks, None, p_size,s_size,rate,'VALID')
 
         labels = np.empty(len(data_patches), dtype='object')
-        labels[np.any(mask_patches, axis=(1,2,3))] = 'rfi'
+        labels[np.any(mask_patches, axis=(1,2,3))] = args.anomaly_class
         labels[np.invert(np.any(mask_patches, axis=(1,2,3)))] = 'normal'
 
         (train_data, test_data, 
@@ -190,6 +190,8 @@ def load_lofar(args):
 
     unet_train_dataset = tf.data.Dataset.from_tensor_slices(train_data).shuffle(BUFFER_SIZE,seed=42).batch(BATCH_SIZE)
     ae_train_dataset = tf.data.Dataset.from_tensor_slices(ae_train_data).shuffle(BUFFER_SIZE,seed=42).batch(BATCH_SIZE)
+
+
     return (unet_train_dataset,
             train_data, 
             train_labels, 
