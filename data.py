@@ -13,6 +13,21 @@ from utils.data import (get_mvtec_images,
                         random_crop,
                         resize,
                         sizes)
+def _random_crop(image,mask,size):
+    #TODO move this to utils.data.augmentation
+    output_images = np.empty((len(image), size[0], size[1], 1)).astype('float32')
+    output_masks = np.empty((len(mask), size[0], size[1], 1)).astype('bool')
+    strt, fnnsh = 0, BATCH_SIZE
+    for i in range(0,len(image),BATCH_SIZE):
+        stacked_image = np.stack([image[strt:fnnsh,...],
+                                  mask[strt:fnnsh,...].astype('float32')],axis=0)
+        cropped_image = tf.image.random_crop(stacked_image, size=[2,len(stacked_image[0]), size[0], size[1], 1])
+        output_images[strt:fnnsh,...]  = cropped_image[0].numpy()
+        output_masks[strt:fnnsh,...]  = cropped_image[1].numpy().astype('bool')
+        strt=fnnsh
+        fnnsh+=BATCH_SIZE
+    return output_images, output_masks
+
 def load_hera(args):
     """
         Load data from hera
@@ -151,16 +166,26 @@ def load_lofar(args):
 
     """
     data, masks = np.load(args.data_path, allow_pickle=True)
-    data = resize(np.absolute(data[...,0:1]).astype('float32'), (sizes[args.anomaly_class], 
-                                                                sizes[args.anomaly_class])) #TODO 
-    masks = resize(masks[...,0:1].astype('int'), (sizes[args.anomaly_class], 
-                                  sizes[args.anomaly_class])).astype('bool')
+    #data = resize(np.absolute(data[...,0:1]).astype('float32'), (sizes[args.anomaly_class], 
+    #                                                            sizes[args.anomaly_class])) #TODO 
+    #masks = resize(masks[...,0:1].astype('int'), (sizes[args.anomaly_class], 
+    #                              sizes[args.anomaly_class])).astype('bool')
 
+    data, masks = _random_crop(np.absolute(data[...,0:1]).astype('float32'),
+                              masks[...,0:1].astype('int'),
+                              (sizes[args.anomaly_class], 
+                               sizes[args.anomaly_class])) #TODO 
 
     # TODO: determine where to place the normalisation
+    data[data==0] = 0.001 # to make log normalisation happy
     data = np.nan_to_num(np.log(data),nan=0)
     data = process(data, per_image=False)
 
+    (train_data, test_data, 
+     train_masks, test_masks) = train_test_split(data, 
+                                                 masks,
+                                                 test_size=0.25, 
+                                                 random_state=42)
 
     if args.limit is not None:
         data = data[:args.limit,...]
@@ -170,20 +195,18 @@ def load_lofar(args):
         s_size = (1,args.patch_stride_x, args.patch_stride_y, 1)
         rate = (1,1,1,1)
 
-        data_patches = get_patches(data, None, p_size,s_size,rate,'VALID')
-        mask_patches = get_patches(masks, None, p_size,s_size,rate,'VALID')
+        train_data = get_patches(train_data, None, p_size,s_size,rate,'VALID')
+        test_data = get_patches(test_data, None, p_size,s_size,rate,'VALID')
+        train_masks = get_patches(train_masks, None, p_size,s_size,rate,'VALID')
+        test_masks= get_patches(test_masks , None, p_size,s_size,rate,'VALID')
 
-        labels = np.empty(len(data_patches), dtype='object')
-        labels[np.any(mask_patches, axis=(1,2,3))] = args.anomaly_class
-        labels[np.invert(np.any(mask_patches, axis=(1,2,3)))] = 'normal'
+        train_labels = np.empty(len(train_data), dtype='object')
+        train_labels[np.any(train_masks, axis=(1,2,3))] = args.anomaly_class
+        train_labels[np.invert(np.any(train_masks, axis=(1,2,3)))] = 'normal'
 
-        (train_data, test_data, 
-         train_labels,test_labels, 
-         train_masks, test_masks) = train_test_split(data_patches, 
-                                                     labels, 
-                                                     mask_patches,
-                                                     test_size=0.25, 
-                                                     random_state=42)
+        test_labels = np.empty(len(test_data), dtype='object')
+        test_labels[np.any(test_masks, axis=(1,2,3))] = args.anomaly_class
+        test_labels[np.invert(np.any(test_masks, axis=(1,2,3)))] = 'normal'
 
         ae_train_data  = train_data[np.invert(np.any(train_masks, axis=(1,2,3)))]
         ae_train_labels = train_labels[np.invert(np.any(train_masks, axis=(1,2,3)))]
@@ -202,3 +225,4 @@ def load_lofar(args):
             test_data, 
             test_labels, 
             test_masks)
+

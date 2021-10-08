@@ -76,7 +76,7 @@ def get_patches(x,
                                      sizes=p_size,
                                      strides=s_size,
                                      rates=rate,
-                                     padding=padding)
+                                     padding=padding).numpy()
 
     x_patches = np.reshape(x_out,(x_out.shape[0]*x_out.shape[1]*x_out.shape[2],
                                   p_size[1],
@@ -134,7 +134,7 @@ def reconstruct(patches,args, labels=None):
         return recon, np.array(labels_recon)
 
     else:
-        return recon
+        return recon.transpose(0,2,1,3)
 
 def reconstruct_latent_patches(patches, args, labels=None):
     """
