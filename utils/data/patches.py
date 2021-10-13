@@ -131,7 +131,7 @@ def reconstruct(patches,args, labels=None):
 
             start = end
             end += n_patches**2 
-        return recon, np.array(labels_recon)
+        return recon.transpose(0,2,1,3), np.array(labels_recon)
 
     else:
         return recon.transpose(0,2,1,3)
