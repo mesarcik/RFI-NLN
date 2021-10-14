@@ -27,7 +27,9 @@ def end_routine(train_images, test_images, test_labels, test_masks, model, model
                                       args)
     else: auc_recon = 'n/a'
     if (args.data == 'MVTEC') or (args.data == 'HERA') or (args.data == 'LOFAR'):
-        seg_auc, seg_auc_nln, seg_dists_auc = accuracy_metrics(model,
+
+        (seg_auc, seg_prc, seg_iou, seg_auc_nln, 
+            seg_prc_nln, seg_iou_nln, seg_dists_auc, _,_)  = accuracy_metrics(model,
                                                                train_images,
                                                                test_images,
                                                                test_labels,
@@ -36,11 +38,6 @@ def end_routine(train_images, test_images, test_labels, test_masks, model, model
                                                                neighbour,
                                                                radius,
                                                                args)
-        seg_prc = 'n/a'
-        seg_prc_nln = 'n/a' 
-        seg_iou  = 'n/a'
-        seg_iou_nln = 'n/a'
-
 
     save_metrics(model_type,
                  args,

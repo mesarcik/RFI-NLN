@@ -4,7 +4,7 @@ import copy
 import random
 from model_config import BUFFER_SIZE,BATCH_SIZE
 from sklearn.model_selection import train_test_split
-from utils.data import (get_mvtec_images, 
+from utils.data import (get_lofar_data, 
                         process,
                         rgb2gray,
                         get_patched_dataset,
@@ -13,20 +13,6 @@ from utils.data import (get_mvtec_images,
                         random_crop,
                         resize,
                         sizes)
-def _random_crop(image,mask,size):
-    #TODO move this to utils.data.augmentation
-    output_images = np.empty((len(image), size[0], size[1], 1)).astype('float32')
-    output_masks = np.empty((len(mask), size[0], size[1], 1)).astype('bool')
-    strt, fnnsh = 0, BATCH_SIZE
-    for i in range(0,len(image),BATCH_SIZE):
-        stacked_image = np.stack([image[strt:fnnsh,...],
-                                  mask[strt:fnnsh,...].astype('float32')],axis=0)
-        cropped_image = tf.image.random_crop(stacked_image, size=[2,len(stacked_image[0]), size[0], size[1], 1])
-        output_images[strt:fnnsh,...]  = cropped_image[0].numpy()
-        output_masks[strt:fnnsh,...]  = cropped_image[1].numpy().astype('bool')
-        strt=fnnsh
-        fnnsh+=BATCH_SIZE
-    return output_images, output_masks
 
 def load_hera(args):
     """
@@ -165,18 +151,9 @@ def load_lofar(args):
         Load data from lofar 
 
     """
-    data, masks = np.load(args.data_path, allow_pickle=True)
-    #data = resize(np.absolute(data[...,0:1]).astype('float32'), (sizes[args.anomaly_class], 
-    #                                                            sizes[args.anomaly_class])) #TODO 
-    #masks = resize(masks[...,0:1].astype('int'), (sizes[args.anomaly_class], 
-    #                              sizes[args.anomaly_class])).astype('bool')
 
-    data, masks = _random_crop(np.absolute(data[...,0:1]).astype('float32'),
-                              masks[...,0:1].astype('int'),
-                              (sizes[args.anomaly_class], 
-                               sizes[args.anomaly_class])) #TODO 
+    data, masks = get_lofar_data('/home/mmesarcik/data/LOFAR/uncompressed', args)
 
-    # TODO: determine where to place the normalisation
     data[data==0] = 0.001 # to make log normalisation happy
     data = np.nan_to_num(np.log(data),nan=0)
     data = process(data, per_image=False)

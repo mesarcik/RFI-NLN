@@ -45,8 +45,8 @@ def accuracy_metrics(model,
         -------
         seg_auc (float32): segmentation auroc 
         seg_auc_nln (float32): segmentation auroc using NLN
-        dists_auc (float32): detection auroc using dists
-        seg_dists_auc (float32): segmentation auroc using dists
+        dists_auroc (float32): detection auroc using dists
+        seg_dists_auroc (float32): segmentation auroc using dists
         seg_prc (float32): segmetnation auprc 
         seg_prc_nln (float32): segmentation auprc using nln
         seg_iou (float32): iou score for reconstruction
@@ -58,12 +58,12 @@ def accuracy_metrics(model,
         x_hat_recon = patches.reconstruct(x_hat, args)
         test_masks_recon = patches.reconstruct(test_masks, args)
         test_data_recon = patches.reconstruct(test_images, args)
-        unet_auc = round(roc_auc_score(test_masks_recon.flatten()>0, x_hat_recon.flatten()),3)
+        unet_auroc, unet_auprc, unet_iou = get_metrics(test_masks_recon, x_hat_recon)
 
         fig, axs = plt.subplots(10,3, figsize=(10,7))
         axs[0,0].set_title('Inp',fontsize=5)
         axs[0,1].set_title('Mask',fontsize=5)
-        axs[0,2].set_title('Recon {}'.format(unet_auc),fontsize=5)
+        axs[0,2].set_title('Recon {}'.format(unet_auroc),fontsize=5)
 
         for i in range(10):
             r = np.random.randint(len(test_data_recon))
@@ -73,9 +73,9 @@ def accuracy_metrics(model,
         plt.savefig('outputs/{}/{}/{}/neighbours.png'.format(model_type,
                                                        args.anomaly_class,
                                                        args.model_name), dpi=300)
-        return unet_auc, -1, -1
+        return (unet_auroc,unet_auprc,unet_iou, -1,-1,-1,-1,-1,-1)
 
-    n =5
+    n =1
     z = infer(model[0].encoder, train_images, args, 'encoder')
     z_query = infer(model[0].encoder, test_images, args, 'encoder')
 
@@ -121,15 +121,16 @@ def accuracy_metrics(model,
     test_masks_recon = patches.reconstruct(test_masks, args)
     error_recon = patches.reconstruct(error, args)
 
-    error_auc = round(roc_auc_score(test_masks_recon.flatten()>0, error_recon.flatten()),3)
-    nln_auc =   round(roc_auc_score(test_masks_recon.flatten()>0, nln_error_recon.flatten()),3)
-    dists_auc = round(roc_auc_score(test_masks_recon.flatten()>0, dists_recon.flatten()),3)
+    ae_auroc, ae_auprc, ae_iou = get_metrics(test_masks_recon, error_recon)
+    nln_auroc, nln_auprc, nln_iou = get_metrics(test_masks_recon, nln_error_recon)
+    dists_auroc, dists_auprc, dists_iou = get_metrics(test_masks_recon, dists_recon)
+
     fig, axs = plt.subplots(10,5, figsize=(10,7))
     axs[0,0].set_title('Inp',fontsize=5)
     axs[0,1].set_title('Mask',fontsize=5)
-    axs[0,2].set_title('Recon {}'.format(error_auc),fontsize=5)
-    axs[0,3].set_title('NLN {}'.format(nln_auc),fontsize=5)
-    axs[0,4].set_title('Dist {}'.format(dists_auc),fontsize=5)
+    axs[0,2].set_title('Recon {}'.format(ae_auc),fontsize=5)
+    axs[0,3].set_title('NLN {}'.format(nln_auroc),fontsize=5)
+    axs[0,4].set_title('Dist {}'.format(dists_auroc),fontsize=5)
 
     for i in range(10):
         r = np.random.randint(len(test_data_recon))
@@ -141,66 +142,25 @@ def accuracy_metrics(model,
     plt.savefig('outputs/{}/{}/{}/neighbours.png'.format(model_type,
                                                    args.anomaly_class,
                                                    args.model_name), dpi=300)
-    return error_auc, nln_auc, dists_auc
+    return (ae_auroc, 
+            ae_auprc, 
+            ae_iou, 
+            nln_auroc, 
+            nln_auprc, 
+            nln_iou, 
+            dists_auroc, 
+            dists_auprc, 
+            dists_iou)
 
+def get_metrics(test_masks_recon, error_recon):
+    fpr,tpr, thr = roc_curve(test_masks_recon.flatten()>0, error_recon.flatten())
+    auroc = auc(fpr, tpr)
+    iou = iou_score(error_recon, test_masks_recon, thr)
+    precision, recall, thresholds = precision_recall_curve(test_masks_recon.flatten()>0, 
+                                                          error_recon.flatten())
+    auprc = auc(recall, precision)
 
-def get_segmentation(error, test_masks, test_labels, args):
-    """
-        Calculates AUROC result of segmentation
-
-        Parameters
-        ----------
-        error (np.array): input-output
-        test_masks (np.array): ground truth segmentation masks 
-        test_labels (np.array): ground truth labels  
-        args (Namespace): cmd_input args
-
-        Returns
-        -------
-        auc (float32): AUROC for segmentation
-        prc (float32): AUPRC for segmentation
-        
-    """
-    fpr, tpr, thr  = roc_curve(test_masks.flatten()>0, np.max(error,axis=-1).flatten())
-    precision, recall, thresholds = precision_recall_curve(test_masks.flatten()>0, np.max(error,axis=-1).flatten())
-    prc = auc(recall, precision)
-    AUC= roc_auc_score(test_masks.flatten()>0, np.mean(error,axis=-1).flatten())
-
-    return AUC,prc
-
-def get_acc(anomaly_class, test_labels, error):
-    """
-        Calculates get accuracy for anomaly detection  
-
-        Parameters
-        ----------
-        anomaly_class (str):  name of anomalous class 
-        error (np.array): input-output
-        test_labels (np.array): ground truth labels  
-
-        Returns
-        -------
-        auc (float32): AUROC for segmentation
-        normal_accuracy (float32): Accuracy of detecting normal samples
-        anomalous_accuracy(float32): Accuracy of detecting anomalous samples 
-        
-    """
-    # Find AUROC threshold that optimises max(TPR-FPR)
-    print(anomaly_class)
-    fpr, tpr, thr  = roc_curve(test_labels == anomaly_class, error)
-    AUC= roc_auc_score(test_labels==anomaly_class,error)
-
-    thr = get_threshold(fpr,tpr,thr,'MD',test_labels, error,anomaly_class)
-
-    # Accuracy of detecting anomalies and non-anomalies using this threshold
-    normal_accuracy = accuracy_score(test_labels == 'non_anomalous', error < thr)
-    anomalous_accuracy = accuracy_score(test_labels == anomaly_class, error > thr)
-
-    print('Anomalous Accuracy = {}'.format(anomalous_accuracy))
-    print('Normal Accuracy = {}'.format(normal_accuracy))
-
-    return AUC, normal_accuracy, anomalous_accuracy
-
+    return auroc, auprc, iou
     
 def get_threshold(fpr,tpr,thr,flag,test_labels,error,anomaly_class):
     """
@@ -272,7 +232,7 @@ def get_dists(neighbours_dist, args):
     else:
         return dists 
 
-def iou_score(error, test_masks):
+def iou_score(error, test_masks,thr):
     """
         Get jaccard index or IOU score
 
@@ -286,8 +246,6 @@ def iou_score(error, test_masks):
         max_iou (float32): maximum iou score for a number of thresholds
 
     """
-    fpr,tpr, thr = roc_curve(test_masks.flatten()>0, np.mean(error,axis=-1).flatten())
-
     iou = []
     for threshold in np.linspace(np.min(thr), np.max(thr),10):
         thresholded =np.mean(error,axis=-1) >=threshold
