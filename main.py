@@ -52,6 +52,14 @@ def main():
                test_masks, 
                cmd_input.args)
 
+    train_resnet(ae_train_dataset,
+             ae_train_data,
+             ae_train_labels,
+             test_data,
+             test_labels, 
+             test_masks, 
+             cmd_input.args)
+
     train_ae(ae_train_dataset,
              ae_train_data,
              ae_train_labels,

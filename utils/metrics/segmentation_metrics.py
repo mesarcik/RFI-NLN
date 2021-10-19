@@ -22,8 +22,6 @@ def accuracy_metrics(model,
                      test_labels,
                      test_masks,
                      model_type,
-                     max_neighbours,
-                     max_radius,
                      args):
 
     """
@@ -38,8 +36,6 @@ def accuracy_metrics(model,
         test_masks (np.array): ground truth masks for the testing images
         model_type (str): the type of model (AE,VAE,...)
         args (Namespace): the argumenets from cmd_args
-        max_neighbours (int): number of neighbours resulting in best AUROC
-        max_radius (double): size of radius resulting in best AUROC
 
         Returns
         -------
@@ -76,6 +72,33 @@ def accuracy_metrics(model,
                                                        args.model_name), dpi=300)
 
         return (unet_auroc, unet_auprc, unet_iou, -1,-1,-1,-1,-1,-1)
+
+    elif model_type =='DKNN':
+        z_train = infer(model[0], train_images, args, 'DKNN')
+        z_test = infer(model[0], test_images, args, 'DKNN')
+
+
+        neighbours_dist, _, _, _ =  nln(z_train, z_test, None, 'knn', 2, -1)
+
+        dists_recon = get_dists(neighbours_dist, args)
+        dknn_auroc, dknn_auprc, dknn_iou = get_metrics(test_masks_recon, 
+                                                      dists_recon)
+
+        fig, axs = plt.subplots(10,3, figsize=(10,7))
+        axs[0,0].set_title('Inp',fontsize=5)
+        axs[0,1].set_title('Mask',fontsize=5)
+        axs[0,2].set_title('Recon {}'.format(dknn_auroc),fontsize=5)
+
+        for i in range(10):
+            r = np.random.randint(len(test_data_recon))
+            axs[i,0].imshow(test_data_recon[r,...,0])
+            axs[i,1].imshow(test_masks_recon[r,...,0])
+            axs[i,2].imshow(dists_recon[r,...,0])
+        plt.savefig('outputs/{}/{}/{}/neighbours.png'.format(model_type,
+                                                       args.anomaly_class,
+                                                       args.model_name), dpi=300)
+
+        return (dknn_auroc, dknn_auprc, dknn_iou, -1,-1,-1,-1,-1,-1)
 
     z = infer(model[0].encoder, train_images, args, 'encoder')
     z_query = infer(model[0].encoder, test_images, args, 'encoder')

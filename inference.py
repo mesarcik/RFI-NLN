@@ -21,9 +21,11 @@ def infer(model, data, args, arch):
     """
     data_tensor = tf.data.Dataset.from_tensor_slices(data).batch(BATCH_SIZE)
 
-    if arch =='AE' or arch == 'encoder':
+    if arch =='AE' or arch == 'encoder' or arch == 'DKNN':
         if arch=='encoder':
             output = np.empty([len(data), args.latent_dim])
+        elif arch=='DKNN':
+            output = np.empty([len(data), 2048])
         else:
             output = np.empty(data.shape)
         strt, fnnsh = 0, BATCH_SIZE
