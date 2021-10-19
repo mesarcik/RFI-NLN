@@ -53,11 +53,12 @@ def accuracy_metrics(model,
         seg_iou_nln (float32): iou score for nln
     """
     # Get output from model #TODO: do we want to normalise?
+    test_data_recon = patches.reconstruct(test_images, args)
+    test_masks_recon = patches.reconstruct(test_masks, args)
+
     if model_type =='UNET':
         x_hat = infer(model[0], test_images, args, 'AE')
         x_hat_recon = patches.reconstruct(x_hat, args)
-        test_masks_recon = patches.reconstruct(test_masks, args)
-        test_data_recon = patches.reconstruct(test_images, args)
         unet_auroc, unet_auprc, unet_iou = get_metrics(test_masks_recon, x_hat_recon)
 
         fig, axs = plt.subplots(10,3, figsize=(10,7))
@@ -73,9 +74,9 @@ def accuracy_metrics(model,
         plt.savefig('outputs/{}/{}/{}/neighbours.png'.format(model_type,
                                                        args.anomaly_class,
                                                        args.model_name), dpi=300)
-        return (unet_auroc,unet_auprc,unet_iou, -1,-1,-1,-1,-1,-1)
 
-    n =1
+        return (unet_auroc, unet_auprc, unet_iou, -1,-1,-1,-1,-1,-1)
+
     z = infer(model[0].encoder, train_images, args, 'encoder')
     z_query = infer(model[0].encoder, test_images, args, 'encoder')
 
@@ -90,47 +91,52 @@ def accuracy_metrics(model,
     else: 
         error_recon, labels_recon, masks_recon  = error, test_labels, test_masks 
 
-    neighbours_dist, neighbours_idx, x_hat_train, neighbour_mask =  nln(z, 
-                                                                        z_query, 
-                                                                        x_hat_train, 
-                                                                        args.algorithm, 
-                                                                        n,
-                                                                        -1)
-    nln_error = get_nln_errors(model,
-                               'AE',
-                               z_query,
-                               z,
-                               test_images,
-                               x_hat_train,
-                               neighbours_idx,
-                               neighbour_mask,
-                               args)
-
-
-    if args.patches:
-        if nln_error.ndim ==4:
-            nln_error_recon = patches.reconstruct(nln_error, args)
-        else:
-            nln_error_recon = patches.reconstruct_latent_patches(nln_error, args)
-    else: nln_error_recon = nln_error
-    
-
-    dists_recon = get_dists(neighbours_dist, args)
-
-    test_data_recon = patches.reconstruct(test_images, args)
-    test_masks_recon = patches.reconstruct(test_masks, args)
-    error_recon = patches.reconstruct(error, args)
-
     ae_auroc, ae_auprc, ae_iou = get_metrics(test_masks_recon, error_recon)
-    nln_auroc, nln_auprc, nln_iou = get_metrics(test_masks_recon, nln_error_recon)
-    dists_auroc, dists_auprc, dists_iou = get_metrics(test_masks_recon, dists_recon)
+    nln_aurocs, dists_aurocs = [], [] 
+    for n in args.neighbors:
+        neighbours_dist, neighbours_idx, x_hat_train, neighbour_mask =  nln(z, 
+                                                                            z_query, 
+                                                                            x_hat_train, 
+                                                                            args.algorithm, 
+                                                                            n,
+                                                                            -1)
+        nln_error = get_nln_errors(model,
+                                   'AE',
+                                   z_query,
+                                   z,
+                                   test_images,
+                                   x_hat_train,
+                                   neighbours_idx,
+                                   neighbour_mask,
+                                   args)
+
+
+        if args.patches:
+            if nln_error.ndim ==4:
+                nln_error_recon = patches.reconstruct(nln_error, args)
+            else:
+                nln_error_recon = patches.reconstruct_latent_patches(nln_error, args)
+        else: nln_error_recon = nln_error
+        
+
+        dists_recon = get_dists(neighbours_dist, args)
+
+        nln_auroc, nln_auprc, nln_iou = get_metrics(test_masks_recon, nln_error_recon)
+        dists_auroc, dists_auprc, dists_iou = get_metrics(test_masks_recon, dists_recon)
+        nln_aurocs.append(nln_auroc)
+        dists_aurocs.append(dists_auroc)
+
+    dists_auroc = np.max(dists_aurocs)    
+    n_dist = args.neighbors[np.argmax(dists_aurocs)]
+    nln_auroc = np.max(nln_aurocs)    
+    n_nln = args.neighbors[np.argmax(nln_aurocs)]
 
     fig, axs = plt.subplots(10,5, figsize=(10,7))
     axs[0,0].set_title('Inp',fontsize=5)
     axs[0,1].set_title('Mask',fontsize=5)
-    axs[0,2].set_title('Recon {}'.format(ae_auc),fontsize=5)
-    axs[0,3].set_title('NLN {}'.format(nln_auroc),fontsize=5)
-    axs[0,4].set_title('Dist {}'.format(dists_auroc),fontsize=5)
+    axs[0,2].set_title('Recon {}'.format(ae_auroc),fontsize=5)
+    axs[0,3].set_title('NLN {} {}'.format(nln_auroc, n_nln),fontsize=5)
+    axs[0,4].set_title('Dist {} {}'.format(dists_auroc, n_dist),fontsize=5)
 
     for i in range(10):
         r = np.random.randint(len(test_data_recon))
@@ -142,6 +148,8 @@ def accuracy_metrics(model,
     plt.savefig('outputs/{}/{}/{}/neighbours.png'.format(model_type,
                                                    args.anomaly_class,
                                                    args.model_name), dpi=300)
+
+
     return (ae_auroc, 
             ae_auprc, 
             ae_iou, 

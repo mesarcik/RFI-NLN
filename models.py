@@ -214,17 +214,13 @@ class VAE(tf.keras.Model):
         x_hat = self.decode(z)
         return x_hat 
 
-def conv2d_block(input_tensor, n_filters, kernel_size = 3, batchnorm = True):
+def conv2d_block(input_tensor, n_filters, kernel_size = 3, batchnorm = True, stride=(1,1)):
     # first layer
-    x = layers.Conv2D(filters = n_filters, kernel_size = (kernel_size, kernel_size),\
-              kernel_initializer = 'he_normal', padding = 'same')(input_tensor)
-    if batchnorm:
-        x = layers.BatchNormalization()(x)
-    x = layers.Activation('relu')(x)
-    
-    # second layer
-    x = layers.Conv2D(filters = n_filters, kernel_size = (kernel_size, kernel_size),\
-              kernel_initializer = 'he_normal', padding = 'same')(input_tensor)
+    x = layers.Conv2D(filters = n_filters, 
+                      kernel_size = (kernel_size, kernel_size),\
+                      kernel_initializer = 'he_normal', 
+                      strides=stride,
+                      padding = 'same')(input_tensor)
     if batchnorm:
         x = layers.BatchNormalization()(x)
     x = layers.Activation('relu')(x)
@@ -234,23 +230,39 @@ def conv2d_block(input_tensor, n_filters, kernel_size = 3, batchnorm = True):
 def UNET(args, n_filters = 16, dropout = 0.05, batchnorm = True):
     # Contracting Path
     input_data = tf.keras.Input(args.input_shape,name='data') 
-    c1 = conv2d_block(input_data, n_filters * 1, kernel_size = 3, batchnorm = batchnorm)
-    p1 = layers.MaxPooling2D((2, 2))(c1)
-    p1 = layers.Dropout(dropout)(p1)
+    c1 = conv2d_block(input_data, 
+                      n_filters * 1, 
+                      kernel_size = 3, 
+                      batchnorm = batchnorm,
+                      stride=(2,2))
+    #p1 = layers.MaxPooling2D((2, 2))(c1)
+    p1 = layers.Dropout(dropout)(c1)
     
-    c2 = conv2d_block(p1, n_filters * 2, kernel_size = 3, batchnorm = batchnorm)
-    p2 = layers.MaxPooling2D((2, 2))(c2)
-    p2 = layers.Dropout(dropout)(p2)
+    c2 = conv2d_block(p1, 
+                      n_filters * 2, 
+                      kernel_size = 3, 
+                      stride=(2,2),
+                      batchnorm = batchnorm)
+    #p2 = layers.MaxPooling2D((2, 2))(c2)
+    p2 = layers.Dropout(dropout)(c2)
     
-    c3 = conv2d_block(p2, n_filters * 4, kernel_size = 3, batchnorm = batchnorm)
-    p3 = layers.MaxPooling2D((2, 2))(c3)
-    p3 = layers.Dropout(dropout)(p3)
+    c3 = conv2d_block(p2, 
+                      n_filters * 4, 
+                      kernel_size = 3, 
+                      stride=(2,2),
+                      batchnorm = batchnorm)
+    #p3 = layers.MaxPooling2D((2, 2))(c3)
+    p3 = layers.Dropout(dropout)(c3)
     
-    c4 = conv2d_block(p3, n_filters * 8, kernel_size = 3, batchnorm = batchnorm)
-    p4 = layers.MaxPooling2D((2, 2))(c4)
-    p4 = layers.Dropout(dropout)(p4)
+    c4 = conv2d_block(p3, 
+                      n_filters * 8, 
+                      kernel_size = 3, 
+                      stride=(2,2),
+                      batchnorm = batchnorm)
+    #p4 = layers.MaxPooling2D((2, 2))(c4)
+    p4 = layers.Dropout(dropout)(c4)
     
-    c5 = conv2d_block(p4, n_filters = n_filters * 16, kernel_size = 3, batchnorm = batchnorm)
+    c5 = conv2d_block(p4, n_filters = n_filters * 16, kernel_size = 3, stride=(2,2), batchnorm = batchnorm)
     
     # Expansive Path
     u6 = layers.Conv2DTranspose(n_filters * 8, (3, 3), strides = (2, 2), padding = 'same')(c5)
@@ -271,6 +283,7 @@ def UNET(args, n_filters = 16, dropout = 0.05, batchnorm = True):
     u9 = layers.Conv2DTranspose(n_filters * 1, (3, 3), strides = (2, 2), padding = 'same')(c8)
     u9 = layers.concatenate([u9, c1])
     u9 = layers.Dropout(dropout)(u9)
+    u9 = layers.UpSampling2D((2,2))(u9)
     c9 = conv2d_block(u9, n_filters * 1, kernel_size = 3, batchnorm = batchnorm)
     
     outputs = layers.Conv2D(1, (1, 1), activation='sigmoid')(c9)
