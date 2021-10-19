@@ -153,18 +153,12 @@ def load_lofar(args):
 
     """
 
-    data, masks = get_lofar_data('/data/mmesarcik/LOFAR/uncompressed', args)
+    train_data, train_masks, test_data, test_masks = get_lofar_data('/home/mmesarcik/data/LOFAR/uncompressed', args)
 
     data[data==0] = 0.001 # to make log normalisation happy
     data = np.nan_to_num(np.log(data),nan=0)
     data = process(data, per_image=False)
 
-
-    (train_data, test_data, 
-     train_masks, test_masks) = train_test_split(data, 
-                                                 masks,
-                                                 test_size=0.25, 
-                                                 random_state=42)
 
     if args.limit is not None:
         data = data[:args.limit,...]
