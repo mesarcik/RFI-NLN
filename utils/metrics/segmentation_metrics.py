@@ -163,7 +163,7 @@ def accuracy_metrics(model,
 def get_metrics(test_masks_recon, error_recon):
     fpr,tpr, thr = roc_curve(test_masks_recon.flatten()>0, error_recon.flatten())
     auroc = auc(fpr, tpr)
-    iou = iou_score(error_recon, test_masks_recon, thr)
+    iou = iou_score(error_recon, test_masks_recon, fpr, tpr, thr)
     precision, recall, thresholds = precision_recall_curve(test_masks_recon.flatten()>0, 
                                                           error_recon.flatten())
     auprc = auc(recall, precision)
@@ -240,7 +240,7 @@ def get_dists(neighbours_dist, args):
     else:
         return dists 
 
-def iou_score(error, test_masks,thr):
+def iou_score(error, test_masks,fpr,tpr,thr):
     """
         Get jaccard index or IOU score
 
@@ -254,10 +254,15 @@ def iou_score(error, test_masks,thr):
         max_iou (float32): maximum iou score for a number of thresholds
 
     """
-    iou = []
-    for threshold in np.linspace(np.min(thr), np.max(thr),10):
-        thresholded =np.mean(error,axis=-1) >=threshold
-        iou.append(jaccard_score(test_masks.flatten()>0, thresholded.flatten()))
 
-    return max(iou) 
+    idx = np.argmax(tpr-fpr) 
+    thresholded = np.mean(error,axis=-1) >=thr[idx]
+    iou = jaccard_score(test_masks.flatten()>0, thresholded.flatten())
+    return iou
+    #iou = []
+    #for threshold in np.linspace(np.min(thr), np.max(thr),10):
+    #    thresholded =np.mean(error,axis=-1) >=threshold
+    #    iou.append(jaccard_score(test_masks.flatten()>0, thresholded.flatten()))
+
+    #return max(iou) 
 

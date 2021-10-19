@@ -100,6 +100,7 @@ class Autoencoder(tf.keras.Model):
         z = self.encoder(x,vae=False)
         x_hat = self.decoder(z)
         return x_hat 
+
 class MultiEncoder(tf.keras.Model):
     def __init__(self,args):
         super(MultiEncoder, self).__init__()

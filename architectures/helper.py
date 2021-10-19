@@ -28,32 +28,28 @@ def end_routine(train_images, test_images, test_labels, test_masks, model, model
     else: auc_recon = 'n/a'
     if (args.data == 'MVTEC') or (args.data == 'HERA') or (args.data == 'LOFAR'):
 
-        (seg_auc, seg_prc, seg_iou, seg_auc_nln, 
-            seg_prc_nln, seg_iou_nln, seg_dists_auc, _,_)  = accuracy_metrics(model,
-                                                               train_images,
-                                                               test_images,
-                                                               test_labels,
-                                                               test_masks,
-                                                               model_type,
-                                                               neighbour,
-                                                               radius,
-                                                               args)
+        (ae_auroc, ae_auprc, ae_iou, nln_auroc, nln_auprc, 
+                nln_iou, dists_auroc, dists_auprc, dists_iou) = accuracy_metrics(model,
+                                                                                 train_images,
+                                                                                 test_images,
+                                                                                 test_labels,
+                                                                                 test_masks,
+                                                                                 model_type,
+                                                                                 neighbour,
+                                                                                 radius,
+                                                                                 args)
+
+    
 
     save_metrics(model_type,
                  args,
-                 auc_recon, 
-                 seg_prc,
-                 neighbour,
-                 radius,
-                 auc_latent,
-                 seg_prc_nln,
-                 seg_auc,
-                 seg_auc_nln,
-                 seg_iou,
-                 seg_iou_nln,
-                 dists_auc,
-                 seg_dists_auc,
-                 sum_auc,
-                 mul_auc)
-
+                 ae_auroc=ae_auroc,
+                 ae_auprc=ae_auprc,
+                 ae_iou=ae_iou,
+                 nln_auroc=nln_auroc,
+                 nln_auprc=nln_auprc, 
+                 nln_iou=nln_iou,
+                 dists_auroc=dists_auroc,
+                 dists_auprc=dists_auprc, 
+                 dists_iou=dists_iou)
 

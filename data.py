@@ -153,14 +153,7 @@ def load_lofar(args):
 
     """
 
-    #data, masks = get_lofar_data('/home/mmesarcik/data/LOFAR/uncompressed', args)
-    data, masks = np.load(args.data_path, allow_pickle=True)
-
-    data, masks = _random_crop(np.absolute(data[...,0:1]).astype('float32'),
-                                           masks[...,0:1].astype('int'),
-                                           (sizes[args.anomaly_class], 
-                                           sizes[args.anomaly_class]))
-
+    data, masks = get_lofar_data('/data/mmesarcik/LOFAR/uncompressed', args)
 
     data[data==0] = 0.001 # to make log normalisation happy
     data = np.nan_to_num(np.log(data),nan=0)

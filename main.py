@@ -59,8 +59,23 @@ def main():
              test_labels, 
              test_masks, 
              cmd_input.args)
-    #train_dae(train_dataset,train_data,train_labels,test_data,test_labels, test_masks, cmd_input.args)
-    #train_ganomaly(train_dataset,train_data,train_labels,test_data,test_labels,test_masks, cmd_input.args)
+
+    train_dae(ae_train_dataset,
+             ae_train_data,
+             ae_train_labels,
+             test_data,
+             test_labels, 
+             test_masks, 
+             cmd_input.args)
+
+    train_ganomaly(ae_train_dataset,
+             ae_train_data,
+             ae_train_labels,
+             test_data,
+             test_labels, 
+             test_masks, 
+             cmd_input.args)
+
     #train_vae(train_dataset,train_data,train_labels,test_data,test_labels, test_masks, cmd_input.args)
     #train_aae(train_dataset,train_data,train_labels,test_data,test_labels, test_masks, cmd_input.args)
 
