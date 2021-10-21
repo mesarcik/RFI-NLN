@@ -53,6 +53,8 @@ parser.add_argument('-patch_stride_x', metavar='-psx', type=int,
                     help = 'x-dimension of strides of patches')
 parser.add_argument('-patch_stride_y', metavar='-psy', type=int, 
                     help = 'y-dimension of strides of patches')
+parser.add_argument('-rfi', metavar='-rfi', type=float, 
+                    help = 'percentage simulated rfi')
 
 args = parser.parse_args()
 args.model_name = new_name()
