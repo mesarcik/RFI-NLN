@@ -108,11 +108,7 @@ def accuracy_metrics(model,
 
     error = get_error('AE', test_images, x_hat,mean=False)
 
-    if args.patches:
-        error_recon, labels_recon  = patches.reconstruct(error, args, test_labels) 
-        masks_recon = patches.reconstruct(test_masks, args)
-    else: 
-        error_recon, labels_recon, masks_recon  = error, test_labels, test_masks 
+    error_recon, labels_recon  = patches.reconstruct(error, args, test_labels) 
 
     ae_auroc, ae_auprc, ae_iou = get_metrics(test_masks_recon, error_recon)
     nln_aurocs, dists_aurocs = [], [] 
