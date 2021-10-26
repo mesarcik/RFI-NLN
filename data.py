@@ -149,35 +149,40 @@ def load_hera(args):
             unet_test_labels, 
             unet_test_masks)
 
-def add_HERA_rfi(test_data, test_labels, test_masks, args):
+def add_HERA_rfi(_test_data, _test_masks, args, test_labels =None):
 #    args.rfi 
-    fqs = np.linspace(.1,.2,args.input_shape[0],endpoint=False)
-    lsts = np.linspace(0,2*np.pi,args.input_shape[0], endpoint=False)
+    test_data = copy.deepcopy(_test_data) 
+    test_masks = copy.deepcopy(_test_masks) 
+    fqs = np.linspace(.1,.2,test_data.shape[1],endpoint=False)
+    lsts = np.linspace(0,2*np.pi,test_data.shape[1], endpoint=False)
     for i in tqdm(range(len(test_data))): 
         if random.randint(0,1):
             stations = np.absolute(rfi.rfi_stations(fqs, lsts)/200)
             test_data[i,...,0] += args.rfi*stations
-            test_masks[i,...,0] = np.logical_or(test_masks[i,...,0],
+            test_masks[i,...,0] = np.logical_or(test_masks[i,...,0].astype('bool'),
                                                 stations>0)
-            test_labels[i] = 'rfi'
+            if test_labels is not None:
+                test_labels[i] = 'rfi'
         if random.randint(0,1):
             impulse = np.absolute(rfi.rfi_impulse(fqs, 
                                                   lsts, 
                                                   impulse_strength=300, 
                                                   impulse_chance=.05))
             test_data[i,...,0] += args.rfi*impulse 
-            test_masks[i,...,0] = np.logical_or(test_masks[i,...,0],
+            test_masks[i,...,0] = np.logical_or(test_masks[i,...,0].astype('bool'),
                                                 impulse>0)
-            test_labels[i] = 'rfi'
+            if test_labels is not None:
+                test_labels[i] = 'rfi'
         if random.randint(0,1):
             dtv = np.absolute(rfi.rfi_dtv(fqs, 
                                           lsts, 
                                           dtv_strength=500,
                                           dtv_chance=.1))
             test_data[i,...,0] += args.rfi*dtv
-            test_masks[i,...,0] = np.logical_or(test_masks[i,...,0],
+            test_masks[i,...,0] = np.logical_or(test_masks[i,...,0].astype('bool'),
                                                 dtv>0)
-            test_labels[i] = 'rfi'
+            if test_labels is not None:
+                test_labels[i] = 'rfi'
         
     return test_data, test_labels, test_masks 
 
@@ -189,15 +194,23 @@ def load_lofar(args):
 
     data, masks = get_lofar_data('/data/mmesarcik/LOFAR/uncompressed', args)
 
-    data[data==0] = 0.001 # to make log normalisation happy
-    data = np.nan_to_num(np.log(data),nan=0)
-    data = process(data, per_image=False)
-
     (train_data, test_data, 
      train_masks, test_masks) = train_test_split(data, 
                                                  masks,
                                                  test_size=0.25, 
                                                  random_state=42)
+
+    # add RFI to the data masks and labels 
+    test_data, _,  test_masks = add_HERA_rfi(test_data, 
+                                          test_masks, 
+                                          args)
+    test_data[test_data==0] = 0.001 # to make log normalisation happy
+    test_data = np.nan_to_num(np.log(test_data),nan=0)
+    test_data = process(test_data, per_image=False)
+
+    train_data[train_data==0] = 0.001 # to make log normalisation happy
+    train_data = np.nan_to_num(np.log(train_data),nan=0)
+    train_data = process(train_data, per_image=False)
 
     if args.limit is not None:
         data = data[:args.limit,...]
@@ -210,7 +223,7 @@ def load_lofar(args):
         train_data = get_patches(train_data, None, p_size,s_size,rate,'VALID')
         test_data = get_patches(test_data, None, p_size,s_size,rate,'VALID')
         train_masks = get_patches(train_masks, None, p_size,s_size,rate,'VALID')
-        test_masks= get_patches(test_masks , None, p_size,s_size,rate,'VALID')
+        test_masks= get_patches(test_masks.astype('int') , None, p_size,s_size,rate,'VALID').astype('bool')
 
         train_labels = np.empty(len(train_data), dtype='object')
         train_labels[np.any(train_masks, axis=(1,2,3))] = args.anomaly_class
@@ -223,16 +236,10 @@ def load_lofar(args):
         ae_train_data  = train_data[np.invert(np.any(train_masks, axis=(1,2,3)))]
         ae_train_labels = train_labels[np.invert(np.any(train_masks, axis=(1,2,3)))]
 
-        test_data  =  test_data[np.invert(np.any(test_masks, axis=(1,2,3)))]
-        test_labels = test_labels[np.invert(np.any(test_masks, axis=(1,2,3)))]
-        test_masks = test_masks[np.invert(np.any(test_masks, axis=(1,2,3)))]
+        #test_data  =  test_data[np.invert(np.any(test_masks, axis=(1,2,3)))]
+        #test_labels = test_labels[np.invert(np.any(test_masks, axis=(1,2,3)))]
+        #test_masks = test_masks[np.invert(np.any(test_masks, axis=(1,2,3)))]
 
-        # add RFI to the data masks and labels 
-        if args.rfi != 0:
-            test_data, test_labels, test_masks = add_HERA_rfi(test_data, 
-                                                              test_labels, 
-                                                              test_masks, 
-                                                              args)
 
     unet_train_dataset = tf.data.Dataset.from_tensor_slices(train_data).shuffle(BUFFER_SIZE,seed=42).batch(BATCH_SIZE)
     ae_train_dataset = tf.data.Dataset.from_tensor_slices(ae_train_data).shuffle(BUFFER_SIZE,seed=42).batch(BATCH_SIZE)
