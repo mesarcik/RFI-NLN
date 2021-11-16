@@ -5,6 +5,7 @@ from tqdm import tqdm
 from glob import glob
 import tensorflow as tf
 from utils.data.defaults import sizes 
+from sklearn.model_selection import train_test_split
 from model_config import BATCH_SIZE
 
 def _random_crop(image,mask,size):
@@ -21,7 +22,7 @@ def _random_crop(image,mask,size):
         fnnsh+=BATCH_SIZE
     return output_images, output_masks
 
-def get_lofar_data(directory, args, num_baselines=100):
+def get_lofar_data(directory, args, num_baselines=800):
     """"
         Walks through LOFAR dataset and returns sampled and cropped data 
         
@@ -32,6 +33,7 @@ def get_lofar_data(directory, args, num_baselines=100):
 
     # read each npy file and select, crop it to 512x512 
     # if the training dataset has already been created then return that
+
     if os.path.exists(os.path.join(directory,'joined_dataset.pickle')):
         print(os.path.join(directory,'{}.joined_dataset.pickle') + ' Loading')
         with open('{}/joined_dataset.pickle'.format(directory),'rb') as f:
@@ -66,9 +68,15 @@ def get_lofar_data(directory, args, num_baselines=100):
         strt=fnnsh
         fnnsh = fnnsh + num_baselines
 
-    pickle.dump((data, masks), open('{}/joined_dataset.pickle'.format(directory), 'wb'), protocol=1)
+    (train_data, test_data,
+     train_masks, test_masks) = train_test_split(data,
+                                                 masks,
+                                                 test_size=0.25,
+                                                 random_state=42)
 
-    return data, masks 
+    pickle.dump((train_data, train_masks, test_data, test_masks), open('{}/joined_dataset.pickle'.format(directory), 'wb'), protocol=4)
+
+    return train_data, train_masks, test_data, test_masks
 
 
         

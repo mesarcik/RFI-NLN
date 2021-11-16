@@ -7,14 +7,15 @@ percentage=0.0
 seed=$(openssl rand -hex 3)
 d=$(date +'%m-%d-%Y-%I-%M_')
 atype=MISO
-patch=64
+patch=128
 
 for ld in 128 
 do
-		for data in /home/mmesarcik/data/LOFAR/uncompressed/L629174_part_3.npy 
+		for data in /home/mmesarcik/data/LOFAR/uncompressed/
 		do
 				python -u main.py -limit $limit \
 								  -anomaly_class rfi\
+								  -rfi 0\
 								  -anomaly_type $atype\
 								  -percentage_anomaly $percentage \
 								  -epochs $epochs \

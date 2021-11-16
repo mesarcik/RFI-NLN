@@ -111,7 +111,7 @@ def accuracy_metrics(model,
     error_recon, labels_recon  = patches.reconstruct(error, args, test_labels) 
 
     ae_auroc, ae_auprc, ae_iou = get_metrics(test_masks_recon, error_recon)
-    nln_aurocs, dists_aurocs = [], [] 
+    nln_aurocs, dists_aurocs, combined_aurocs = [], [], []
     for n in args.neighbors:
         neighbours_dist, neighbours_idx, x_hat_train, neighbour_mask =  nln(z, 
                                                                             z_query, 
@@ -139,23 +139,30 @@ def accuracy_metrics(model,
         
 
         dists_recon = get_dists(neighbours_dist, args)
+        alpha=0.8
+        combined_recon = alpha*normalise(nln_error_recon) + (1-alpha)*normalise(dists_recon)
 
         nln_auroc, nln_auprc, nln_iou = get_metrics(test_masks_recon, nln_error_recon)
         dists_auroc, dists_auprc, dists_iou = get_metrics(test_masks_recon, dists_recon)
+        combined_auroc, combined_auprc, combined_iou = get_metrics(test_masks_recon, combined_recon)
         nln_aurocs.append(nln_auroc)
         dists_aurocs.append(dists_auroc)
+        combined_aurocs.append(combined_auroc)
 
     dists_auroc = np.max(dists_aurocs)    
     n_dist = args.neighbors[np.argmax(dists_aurocs)]
     nln_auroc = np.max(nln_aurocs)    
     n_nln = args.neighbors[np.argmax(nln_aurocs)]
+    combined_auroc = np.max(combined_aurocs)    
+    n_combined= args.neighbors[np.argmax(combined_aurocs)]
 
-    fig, axs = plt.subplots(10,5, figsize=(10,7))
+    fig, axs = plt.subplots(10,6, figsize=(10,7))
     axs[0,0].set_title('Inp',fontsize=5)
     axs[0,1].set_title('Mask',fontsize=5)
     axs[0,2].set_title('Recon {}'.format(ae_auroc),fontsize=5)
     axs[0,3].set_title('NLN {} {}'.format(nln_auroc, n_nln),fontsize=5)
     axs[0,4].set_title('Dist {} {}'.format(dists_auroc, n_dist),fontsize=5)
+    axs[0,5].set_title('Combined {} {}'.format(combined_auroc, n_combined),fontsize=5)
 
     for i in range(10):
         r = np.random.randint(len(test_data_recon))
@@ -164,6 +171,7 @@ def accuracy_metrics(model,
         axs[i,2].imshow(error_recon[r,...,0])
         axs[i,3].imshow(nln_error_recon[r,...,0])
         axs[i,4].imshow(dists_recon[r,...,0])
+        axs[i,5].imshow(combined_recon[r,...,0])
     plt.savefig('outputs/{}/{}/{}/neighbours.png'.format(model_type,
                                                    args.anomaly_class,
                                                    args.model_name), dpi=300)
@@ -175,6 +183,9 @@ def accuracy_metrics(model,
             nln_auroc, 
             nln_auprc, 
             nln_iou, 
+            dists_auroc, 
+            dists_auprc, 
+            dists_iou,
             dists_auroc, 
             dists_auprc, 
             dists_iou)

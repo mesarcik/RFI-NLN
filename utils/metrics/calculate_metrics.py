@@ -100,7 +100,10 @@ def save_metrics(model_type,
                                      'NLN_IOU',
                                      'DIST_AUROC',
                                      'DIST_AUPRC',
-                                     'DIST_IOU'])
+                                     'DIST_IOU',
+                                     'COMBINED_AUROC',
+                                     'COMBINED_AUPRC',
+                                     'COMBINED_IOU'])
     else:  
         df = pd.read_csv('outputs/results_{}_{}.csv'.format(args.data,
                                                             args.seed))
@@ -121,7 +124,10 @@ def save_metrics(model_type,
                     'NLN_IOU':kwargs['nln_iou'],
                     'DIST_AUROC':kwargs['dists_auroc'],
                     'DIST_AUPRC':kwargs['dists_auprc'],
-                    'DIST_IOU':kwargs['dists_iou']
+                    'DIST_IOU':kwargs['dists_iou'],
+                    'COMBINED_AUROC':kwargs['combined_auroc'],
+                    'COMBINED_AUPRC':kwargs['combined_auprc'],
+                    'COMBINED_IOU':kwargs['combined_iou']
                     },
                      ignore_index=True)
 

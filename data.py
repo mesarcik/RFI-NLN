@@ -192,18 +192,14 @@ def load_lofar(args):
 
     """
 
-    data, masks = get_lofar_data('/data/mmesarcik/LOFAR/uncompressed', args)
+    train_data, train_masks, test_data, test_masks = get_lofar_data('/home/mmesarcik/data/LOFAR/uncompressed', args)
 
-    (train_data, test_data, 
-     train_masks, test_masks) = train_test_split(data, 
-                                                 masks,
-                                                 test_size=0.25, 
-                                                 random_state=42)
 
     # add RFI to the data masks and labels 
-    test_data, _,  test_masks = add_HERA_rfi(test_data, 
-                                          test_masks, 
-                                          args)
+    if args.rfi != 0:
+        test_data, _,  test_masks = add_HERA_rfi(test_data, 
+                                              test_masks, 
+                                              args)
     test_data[test_data==0] = 0.001 # to make log normalisation happy
     test_data = np.nan_to_num(np.log(test_data),nan=0)
     test_data = process(test_data, per_image=False)
@@ -213,7 +209,10 @@ def load_lofar(args):
     train_data = process(train_data, per_image=False)
 
     if args.limit is not None:
-        data = data[:args.limit,...]
+        train_data = train_data[:args.limit,...]
+        train_masks = train_masks[:args.limit,...]
+        test_data  = test_data[:args.limit,...]
+        test_masks = test_masks[:args.limit,...]
 
     if args.patches:
         p_size = (1,args.patch_x, args.patch_y, 1)

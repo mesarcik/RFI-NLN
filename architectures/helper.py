@@ -10,7 +10,8 @@ def end_routine(train_images, test_images, test_labels, test_masks, model, model
 
     
     (ae_auroc, ae_auprc, ae_iou, nln_auroc, nln_auprc, 
-            nln_iou, dists_auroc, dists_auprc, dists_iou) = accuracy_metrics(model,
+            nln_iou, dists_auroc, dists_auprc, dists_iou,
+            combined_iou, combined_auroc, combined_auprc) = accuracy_metrics(model,
                                                                              train_images,
                                                                              test_images,
                                                                              test_labels,
@@ -30,5 +31,8 @@ def end_routine(train_images, test_images, test_labels, test_masks, model, model
                  nln_iou=nln_iou,
                  dists_auroc=dists_auroc,
                  dists_auprc=dists_auprc, 
-                 dists_iou=dists_iou)
+                 dists_iou=dists_iou,
+                 combined_auroc=combined_auroc,
+                 combined_auprc=combined_auprc, 
+                 combined_iou=combined_iou)
 

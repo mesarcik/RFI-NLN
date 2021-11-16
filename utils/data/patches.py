@@ -1,6 +1,7 @@
 import tensorflow as tf
 import numpy as np
 from .defaults import sizes
+from model_config import *
 
 def get_patched_dataset(train_images, 
                         train_labels, 
@@ -72,22 +73,37 @@ def get_patches(x,
         s_size (list) stride size 
         rate (list) subsampling rate after getting patches 
     """
-    x_out = tf.image.extract_patches(images=x,
-                                     sizes=p_size,
-                                     strides=s_size,
-                                     rates=rate,
-                                     padding=padding).numpy()
+    scaling_factor =(x.shape[1]//p_size[1])**2
+    output = np.empty([x.shape[0]*scaling_factor,p_size[1], p_size[2], x.shape[-1]]) 
 
-    x_patches = np.reshape(x_out,(x_out.shape[0]*x_out.shape[1]*x_out.shape[2],
-                                  p_size[1],
-                                  p_size[2],
-                                  x.shape[-1]))
+    strt, fnnsh = 0, BATCH_SIZE
+    output_start, output_fnnsh = 0, BATCH_SIZE*scaling_factor
+    
+    for i in range(0,len(x),BATCH_SIZE):
+        x_out = tf.image.extract_patches(images=x[strt:fnnsh,...],
+                                         sizes=p_size,
+                                         strides=s_size,
+                                         rates=rate,
+                                         padding=padding).numpy()
+
+        x_patches = np.reshape(x_out,(x_out.shape[0]*x_out.shape[1]*x_out.shape[2],
+                                      p_size[1],
+                                      p_size[2],
+                                      x.shape[-1]))
+
+        output[output_start:output_fnnsh,...] = x_patches
+
+        strt=fnnsh
+        fnnsh+=BATCH_SIZE
+        output_start=output_fnnsh
+        output_fnnsh+=BATCH_SIZE*scaling_factor
+
 
     if y is not None:
         y_labels = np.array([[label]*x_out.shape[1]*x_out.shape[2] for label in y]).flatten()
         return x_patches,y_labels
     else:
-        return x_patches
+        return output 
 
 def reconstruct(patches,args, labels=None):
     """
