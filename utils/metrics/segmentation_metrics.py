@@ -71,7 +71,7 @@ def accuracy_metrics(model,
                                                        args.anomaly_class,
                                                        args.model_name), dpi=300)
 
-        return (unet_auroc, unet_auprc, unet_iou, -1,-1,-1,-1,-1,-1)
+        return (unet_auroc, unet_auprc, unet_iou, -1,-1,-1,-1,-1,-1, -1, -1, -1)
 
     elif model_type =='DKNN':
         z_train = infer(model[0], train_images, args, 'DKNN')
@@ -98,7 +98,7 @@ def accuracy_metrics(model,
                                                        args.anomaly_class,
                                                        args.model_name), dpi=300)
 
-        return (dknn_auroc, dknn_auprc, dknn_iou, -1,-1,-1,-1,-1,-1)
+        return (dknn_auroc, dknn_auprc, dknn_iou, -1,-1,-1,-1,-1,-1,-1,-1, -1)
 
     z = infer(model[0].encoder, train_images, args, 'encoder')
     z_query = infer(model[0].encoder, test_images, args, 'encoder')
