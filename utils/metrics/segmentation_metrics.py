@@ -71,7 +71,7 @@ def accuracy_metrics(model,
                                                        args.anomaly_class,
                                                        args.model_name), dpi=300)
 
-        return (unet_auroc, unet_auprc, unet_iou, -1,-1,-1,-1,-1,-1)
+        return (unet_auroc, unet_auprc, unet_iou, -1,-1,-1,-1,-1,-1, -1, -1, -1)
 
     elif model_type =='DKNN':
         z_train = infer(model[0], train_images, args, 'DKNN')
@@ -98,7 +98,7 @@ def accuracy_metrics(model,
                                                        args.anomaly_class,
                                                        args.model_name), dpi=300)
 
-        return (dknn_auroc, dknn_auprc, dknn_iou, -1,-1,-1,-1,-1,-1)
+        return (dknn_auroc, dknn_auprc, dknn_iou, -1,-1,-1,-1,-1,-1,-1,-1, -1)
 
     z = infer(model[0].encoder, train_images, args, 'encoder')
     z_query = infer(model[0].encoder, test_images, args, 'encoder')
@@ -139,7 +139,7 @@ def accuracy_metrics(model,
         
 
         dists_recon = get_dists(neighbours_dist, args)
-        alpha=0.8
+        alpha=0.3
         combined_recon = alpha*normalise(nln_error_recon) + (1-alpha)*normalise(dists_recon)
 
         nln_auroc, nln_auprc, nln_iou = get_metrics(test_masks_recon, nln_error_recon)
@@ -186,9 +186,9 @@ def accuracy_metrics(model,
             dists_auroc, 
             dists_auprc, 
             dists_iou,
-            dists_auroc, 
-            dists_auprc, 
-            dists_iou)
+            combined_auroc, 
+            combined_auprc, 
+            combined_iou)
 
 def get_metrics(test_masks_recon, error_recon):
     fpr,tpr, thr = roc_curve(test_masks_recon.flatten()>0, error_recon.flatten())

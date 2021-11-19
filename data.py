@@ -3,7 +3,7 @@ import numpy as np
 import copy
 import random
 from tqdm import tqdm
-from hera_sim import rfi 
+#from hera_sim import rfi 
 from model_config import BUFFER_SIZE,BATCH_SIZE
 from sklearn.model_selection import train_test_split
 from utils.data import (get_lofar_data, 
@@ -192,7 +192,7 @@ def load_lofar(args):
 
     """
 
-    train_data, train_masks, test_data, test_masks = get_lofar_data('/home/mmesarcik/data/LOFAR/uncompressed', args)
+    train_data, train_masks, test_data, test_masks = get_lofar_data('/data/mmesarcik/LOFAR/uncompressed', args)
 
 
     # add RFI to the data masks and labels 
@@ -209,10 +209,13 @@ def load_lofar(args):
     train_data = process(train_data, per_image=False)
 
     if args.limit is not None:
-        train_data = train_data[:args.limit,...]
-        train_masks = train_masks[:args.limit,...]
-        test_data  = test_data[:args.limit,...]
-        test_masks = test_masks[:args.limit,...]
+        train_indx = np.random.permutation(len(train_data))[:args.limit]
+        test_indx = np.random.permutation(len(test_data))[:args.limit]
+
+        train_data  = train_data [train_indx]
+        train_masks = train_masks[train_indx]
+        #test_data   = test_data  [test_indx]
+        #test_masks  = test_masks [test_indx]
 
     if args.patches:
         p_size = (1,args.patch_x, args.patch_y, 1)
@@ -239,6 +242,9 @@ def load_lofar(args):
         #test_labels = test_labels[np.invert(np.any(test_masks, axis=(1,2,3)))]
         #test_masks = test_masks[np.invert(np.any(test_masks, axis=(1,2,3)))]
 
+    ae_train_data = ae_train_data.astype('float32') 
+    train_data = train_data.astype('float32') 
+    test_data = test_data.astype('float32') 
 
     unet_train_dataset = tf.data.Dataset.from_tensor_slices(train_data).shuffle(BUFFER_SIZE,seed=42).batch(BATCH_SIZE)
     ae_train_dataset = tf.data.Dataset.from_tensor_slices(ae_train_data).shuffle(BUFFER_SIZE,seed=42).batch(BATCH_SIZE)
