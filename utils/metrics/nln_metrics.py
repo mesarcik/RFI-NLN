@@ -295,7 +295,7 @@ def get_nln_metrics(model,
                         error, test_labels_ = reconstruct_latent_patches(error, args, test_labels) 
                 else: test_labels_ = test_labels
 
-                np.mean(error,axis=tuple(range(1,error.ndim)),out=error)
+                error =np.mean(error,axis=tuple(range(1,error.ndim)))
 
                 temp_args = [error,test_labels_,args.anomaly_class,
                              args.neighbors, args.radius,n_bour,r, max_auc,

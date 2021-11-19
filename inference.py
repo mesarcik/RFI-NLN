@@ -97,6 +97,6 @@ def get_error(model_type,
         np.abs(error,dtype=np.float32, out=error)
 
     if mean:
-        np.mean(error,axis=tuple(range(1,error.ndim)), out=error)
+        error = np.mean(error,axis=tuple(range(1,error.ndim)))
     
     return error 
