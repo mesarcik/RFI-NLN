@@ -224,8 +224,8 @@ def load_lofar(args):
 
         train_data = get_patches(train_data, None, p_size,s_size,rate,'VALID')
         test_data = get_patches(test_data, None, p_size,s_size,rate,'VALID')
-        train_masks = get_patches(train_masks, None, p_size,s_size,rate,'VALID')
-        test_masks= get_patches(test_masks.astype('int') , None, p_size,s_size,rate,'VALID').astype('bool')
+        train_masks = get_patches(train_masks, None, p_size,s_size,rate,'VALID').astype(np.bool)
+        test_masks= get_patches(test_masks.astype('int') , None, p_size,s_size,rate,'VALID').astype(np.bool)
 
         train_labels = np.empty(len(train_data), dtype='object')
         train_labels[np.any(train_masks, axis=(1,2,3))] = args.anomaly_class
@@ -242,9 +242,9 @@ def load_lofar(args):
         #test_labels = test_labels[np.invert(np.any(test_masks, axis=(1,2,3)))]
         #test_masks = test_masks[np.invert(np.any(test_masks, axis=(1,2,3)))]
 
-    ae_train_data = ae_train_data.astype('float32') 
-    train_data = train_data.astype('float32') 
-    test_data = test_data.astype('float32') 
+    ae_train_data = ae_train_data.astype(np.float16) 
+    train_data = train_data.astype(np.float16) 
+    test_data = test_data.astype(np.float16) 
 
     unet_train_dataset = tf.data.Dataset.from_tensor_slices(train_data).shuffle(BUFFER_SIZE,seed=42).batch(BATCH_SIZE)
     ae_train_dataset = tf.data.Dataset.from_tensor_slices(ae_train_data).shuffle(BUFFER_SIZE,seed=42).batch(BATCH_SIZE)
