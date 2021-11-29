@@ -22,137 +22,80 @@ def load_hera(args):
         Load data from hera
 
     """
-    unet_path = '/data/mmesarcik/hera/HERA/HERA_6_27-09-2021_UNET.pkl'
-    unet_data, unet_labels, unet_masks, _ =  np.load(unet_path, allow_pickle=True)
+    data, labels, masks, _ =  np.load(args.data_path, allow_pickle=True)
 
-    ae_path = '/data/mmesarcik/hera/HERA/HERA_0_27-09-2021_AE.pkl'
-    ae_data, ae_labels, ae_masks, _ =  np.load(ae_path, allow_pickle=True)
+    data = np.expand_dims(data, axis=-1)
+    data = process(data, per_image=True).astype(np.float16)
+    masks = np.swapaxes(masks, 1,2)
+    masks = np.expand_dims(masks,axis=-1)
 
+    (train_data, test_data, 
+     train_labels, test_labels, 
+     train_masks, test_masks) = train_test_split(data, 
+                                                 labels, 
+                                                 masks,
+                                                 test_size=0.25, 
+                                                 random_state=42)
+    if args.percentage_anomaly is not None:
+        _m = np.random.random(train_masks.shape)<args.percentage_anomaly
+        train_masks[_m] = np.invert(train_masks[_m])
 
-    unet_data = np.sqrt(unet_data[...,0]**2 + unet_data[...,1]**2)
-    unet_data = np.expand_dims(unet_data, axis=-1)
-#    mi,ma = np.min(unet_data), np.max(unet_data)
-#    unet_data = (unet_data - mi)/(ma -mi)
-    unet_data = process(unet_data, per_image=True)#unet_data.astype('float32')
-
-    ae_data = np.sqrt(ae_data[...,0]**2 + ae_data[...,1]**2)
-    ae_data = np.expand_dims(ae_data, axis=-1)
-#    ae_data = (ae_data - mi)/(ma -mi)
-    ae_data = process(ae_data, per_image=True)
-
-    unet_masks = np.swapaxes(unet_masks, 1,2)
-    unet_masks = np.expand_dims(unet_masks,axis=-1)
-
-    ae_masks = np.swapaxes(ae_masks, 1,2)
-    ae_masks = np.expand_dims(ae_masks,axis=-1)
-
-    (unet_train_data, unet_test_data, 
-        unet_train_labels, unet_test_labels, 
-            unet_train_masks, unet_test_masks) = train_test_split(unet_data, 
-                                                                  unet_labels, 
-                                                                  unet_masks,
-                                                                  test_size=0.25, 
-                                                                  random_state=42)
-    _unet_test_labels = copy.deepcopy(unet_test_labels)
-    _unet_train_labels = copy.deepcopy(unet_train_labels)
-    for i,(train_label,test_label) in enumerate(zip(unet_train_labels,unet_test_labels)):
-        if args.anomaly_class in test_label: 
-            _unet_test_labels[i] = args.anomaly_class
-        else:
-            _unet_test_labels[i] = 'normal'
-
-        if args.anomaly_class in train_label: 
-            _unet_train_labels[i] = args.anomaly_class
-        else:
-            _unet_train_labels[i] = 'normal'
-        #if 'rfi_stations' in train_label:
-        #    _unet_train_labels[i] = 'rfi_stations' 
-
-    unet_test_labels = np.array(_unet_test_labels)
-    unet_train_labels = np.array(_unet_train_labels)
-    ae_labels = np.array(['normal']*len(ae_labels))
-    #remove class from training data
-    #unet_train_data = unet_train_data[unet_train_labels != 'rfi_stations']
-    #unet_train_masks = unet_train_masks[unet_train_labels != 'rfi_stations']
-    #unet_train_labels = unet_train_labels[unet_train_labels != 'rfi_stations']
-
-#    if str(args.anomaly_class) is not None:
-#        if args.anomaly_type == 'MISO':
-#            indicies = np.argwhere(train_labels == str(args.anomaly_class))
-#
-#            mask_train  = np.invert(train_labels == str(args.anomaly_class))
-#        else: 
-#            indicies = np.argwhere(train_labels != str(args.anomaly_class))
-#
-#            mask_train  = train_labels == str(args.anomaly_class)
-#
-#        train_data= train_data[mask_train]
-#        train_labels = train_labels[mask_train]
-#        train_masks = train_masks[mask_train]
-#
     if args.limit is not None:
-        unet_train_data =   unet_train_data[:args.limit,...]
-        unet_train_labels = unet_train_labels[:args.limit,...]
-        unet_train_masks =  unet_train_masks[:args.limit,...]
+        train_indx = np.random.permutation(len(train_data))[:args.limit]
 
-        ae_data = ae_data[:args.limit,...]
-        ae_masks= ae_masks[:args.limit,...]
-        ae_labels = ae_labels[:args.limit,...]
+        train_data  = train_data [train_indx]
+        train_masks = train_masks[train_indx]
 
     if args.patches:
-        data  = get_patched_dataset(unet_train_data,
-                                    unet_train_labels,
-                                    unet_test_data,
-                                    unet_test_labels,
-                                    unet_test_masks,
-                                    p_size = (1,args.patch_x, args.patch_y, 1),
-                                    s_size = (1,args.patch_stride_x, args.patch_stride_y, 1),
-                                    central_crop=False)
-        (unet_train_data,
-         unet_train_labels, 
-         unet_test_data, 
-         unet_test_labels, 
-         unet_test_masks) = data
+        p_size = (1,args.patch_x, args.patch_y, 1)
+        s_size = (1,args.patch_stride_x, args.patch_stride_y, 1)
+        rate = (1,1,1,1)
 
-        unet_train_masks_patches, _ = get_patches(unet_train_masks,
-                                                  unet_train_labels,
-                                                  (1,args.patch_x, args.patch_y, 1),
-                                                  (1,args.patch_stride_x, args.patch_stride_y, 1),
-                                                  (1,1,1,1),
-                                                  'VALID')
-        unet_train_masks = unet_train_masks_patches
-        ae_data, ae_labels = get_patches(ae_data,
-                                         ae_labels,
-                                         (1,args.patch_x, args.patch_y, 1),
-                                         (1,args.patch_stride_x, args.patch_stride_y, 1),
-                                         (1,1,1,1),
-                                         'VALID')
-        
+        train_data = get_patches(train_data, None, p_size,s_size,rate,'VALID')
+        test_data = get_patches(test_data, None, p_size,s_size,rate,'VALID')
+        train_masks = get_patches(train_masks, None, p_size,s_size,rate,'VALID').astype(np.bool)
+        test_masks= get_patches(test_masks.astype('int') , None, p_size,s_size,rate,'VALID').astype(np.bool)
 
-    #if args.rotate:
-    #    train_images = random_rotation(train_images) 
-    #    train_images, train_labels, test_images, test_labels, test_masks = data
+        train_labels = np.empty(len(train_data), dtype='object')
+        train_labels[np.any(train_masks, axis=(1,2,3))] = args.anomaly_class
+        train_labels[np.invert(np.any(train_masks, axis=(1,2,3)))] = 'normal'
 
-    unet_train_dataset = tf.data.Dataset.from_tensor_slices(unet_train_data).shuffle(BUFFER_SIZE).batch(BATCH_SIZE)
+        test_labels = np.empty(len(test_data), dtype='object')
+        test_labels[np.any(test_masks, axis=(1,2,3))] = args.anomaly_class
+        test_labels[np.invert(np.any(test_masks, axis=(1,2,3)))] = 'normal'
 
-    ae_train_dataset = tf.data.Dataset.from_tensor_slices(ae_data).shuffle(BUFFER_SIZE).batch(BATCH_SIZE)
+
+        ae_train_data  = train_data[np.invert(np.any(train_masks, axis=(1,2,3)))]
+        ae_train_labels = train_labels[np.invert(np.any(train_masks, axis=(1,2,3)))]
+
+
+
+    unet_train_dataset = tf.data.Dataset.from_tensor_slices(train_data).shuffle(BUFFER_SIZE).batch(BATCH_SIZE)
+    ae_train_dataset = tf.data.Dataset.from_tensor_slices(ae_train)data).shuffle(BUFFER_SIZE).batch(BATCH_SIZE)
 
     return (unet_train_dataset,
-            ae_train_dataset,
             unet_train_data, 
-            ae_data, 
-            unet_train_masks, 
-            ae_masks,
             unet_train_labels,
+            unet_train_masks, 
+            ae_train_dataset,
+            ae_data, 
             ae_labels,
-            unet_test_data, 
-            unet_test_labels, 
-            unet_test_masks)
+            test_data, 
+            test_labels, 
+            test_masks)
 
-def add_HERA_rfi(_test_data, _test_masks, args, test_labels =None):
+def add_HERA_rfi(_data, _masks, args, expand=True, test_labels =None):
+    """
+        add synthetic RFI to data
+        _data (np.array): the data to add rfi to
+        _masks (np.array): the masks to add rfi to
+        args (Namespace): utils.cmd_args
+        expand (bool): expand RFI masks (add noise) or remove masks 
+
+    """
 #    args.rfi 
-    test_data = copy.deepcopy(_test_data) 
-    test_masks = copy.deepcopy(_test_masks) 
+    test_data = copy.deepcopy(_data) 
+    test_masks = copy.deepcopy(_masks) 
     fqs = np.linspace(.1,.2,test_data.shape[1],endpoint=False)
     lsts = np.linspace(0,2*np.pi,test_data.shape[1], endpoint=False)
     for i in tqdm(range(len(test_data))): 
@@ -183,6 +126,7 @@ def add_HERA_rfi(_test_data, _test_masks, args, test_labels =None):
                                                 dtv>0)
             if test_labels is not None:
                 test_labels[i] = 'rfi'
+
         
     return test_data, test_labels, test_masks 
 

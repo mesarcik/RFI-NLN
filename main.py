@@ -10,18 +10,16 @@ def main():
     """
 
     if cmd_input.args.data == 'HERA':
-        data  = load_hera(cmd_input.args)
         (unet_train_dataset,
-         ae_train_dataset,
-         train_data, 
-         ae_train_data, 
-         train_masks, 
-         ae_train_masks,
-         train_labels,
-         ae_train_labels,
-         test_data, 
-         test_labels, 
-         test_masks) = data
+            train_data, 
+            train_labels, 
+            train_masks, 
+            ae_train_dataset,
+            ae_train_data, 
+            ae_train_labels, 
+            test_data, 
+            test_labels, 
+            test_masks) = load_hera(cmd_input.args)
 
 
     elif cmd_input.args.data == 'LOFAR':
