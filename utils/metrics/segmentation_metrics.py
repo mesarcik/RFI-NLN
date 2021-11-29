@@ -64,9 +64,9 @@ def accuracy_metrics(model,
 
         for i in range(10):
             r = np.random.randint(len(test_data_recon))
-            axs[i,0].imshow(test_data_recon[r,...,0])
-            axs[i,1].imshow(test_masks_recon[r,...,0])
-            axs[i,2].imshow(x_hat_recon[r,...,0])
+            axs[i,0].imshow(test_data_recon[r,...,0].astype(np.float32))
+            axs[i,1].imshow(test_masks_recon[r,...,0].astype(np.float32))
+            axs[i,2].imshow(x_hat_recon[r,...,0].astype(np.float32))
         plt.savefig('outputs/{}/{}/{}/neighbours.png'.format(model_type,
                                                        args.anomaly_class,
                                                        args.model_name), dpi=300)
@@ -91,9 +91,9 @@ def accuracy_metrics(model,
 
         for i in range(10):
             r = np.random.randint(len(test_data_recon))
-            axs[i,0].imshow(test_data_recon[r,...,0])
-            axs[i,1].imshow(test_masks_recon[r,...,0])
-            axs[i,2].imshow(dists_recon[r,...,0])
+            axs[i,0].imshow(test_data_recon[r,...,0].astype(np.float32))
+            axs[i,1].imshow(test_masks_recon[r,...,0].astype(np.float32))
+            axs[i,2].imshow(dists_recon[r,...,0].astype(np.float32))
         plt.savefig('outputs/{}/{}/{}/neighbours.png'.format(model_type,
                                                        args.anomaly_class,
                                                        args.model_name), dpi=300)
@@ -166,12 +166,12 @@ def accuracy_metrics(model,
 
     for i in range(10):
         r = np.random.randint(len(test_data_recon))
-        axs[i,0].imshow(test_data_recon[r,...,0])
-        axs[i,1].imshow(test_masks_recon[r,...,0])
-        axs[i,2].imshow(error_recon[r,...,0])
-        axs[i,3].imshow(nln_error_recon[r,...,0])
-        axs[i,4].imshow(dists_recon[r,...,0])
-        axs[i,5].imshow(combined_recon[r,...,0])
+        axs[i,0].imshow(test_data_recon[r,...,0].astype(np.float32))
+        axs[i,1].imshow(test_masks_recon[r,...,0].astype(np.float32))
+        axs[i,2].imshow(error_recon[r,...,0].astype(np.float32))
+        axs[i,3].imshow(nln_error_recon[r,...,0].astype(np.float32))
+        axs[i,4].imshow(dists_recon[r,...,0].astype(np.float32))
+        axs[i,5].imshow(combined_recon[r,...,0].astype(np.float32))
     plt.savefig('outputs/{}/{}/{}/neighbours.png'.format(model_type,
                                                    args.anomaly_class,
                                                    args.model_name), dpi=300)

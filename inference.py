@@ -23,11 +23,11 @@ def infer(model, data, args, arch):
 
     if arch =='AE' or arch == 'encoder' or arch == 'DKNN':
         if arch=='encoder':
-            output = np.empty([len(data), args.latent_dim],dtype='float32')
+            output = np.empty([len(data), args.latent_dim],np.float16)
         elif arch=='DKNN':
-            output = np.empty([len(data), 2048], dtype='float32')
+            output = np.empty([len(data), 2048], np.float16)
         else:
-            output = np.empty(data.shape,dtype='float32')
+            output = np.empty(data.shape,dtype=np.float16)
         strt, fnnsh = 0, BATCH_SIZE
         for batch in data_tensor:
             output[strt:fnnsh,...] = model(batch).numpy() 
@@ -35,7 +35,7 @@ def infer(model, data, args, arch):
             fnnsh +=BATCH_SIZE
     
     else:
-        output = np.empty([len(data), args.latent_dim], dtype='float32')
+        output = np.empty([len(data), args.latent_dim], dtype=np.float16)
         strt, fnnsh = 0, BATCH_SIZE
         for batch in data_tensor:
             output[strt:fnnsh,...] = model(batch)[0].numpy() # for disc
