@@ -51,7 +51,7 @@ def generate_and_save_images(model, epoch, test_input,name,args):
         predictions = test_input
     else:
         predictions = model(test_input, training=False)
-
+    predictions = predictions.astype('float32')
     fig = plt.figure(figsize=(10,10))
 
     for i in range(predictions.shape[0]):
@@ -89,8 +89,9 @@ def save_training_curves(model,args,test_images,test_labels,name):
         name (str): model name
 
     """
-    model_output = infer(model[0], test_images, args, 'AE') 
-    error = get_error('AE',test_images, model_output)
+    model_output = infer(model[0], test_images, args, 'AE').astype(np.float32)
+    error = get_error('AE',test_images, model_output).astype(np.float32)
+    test_images = test_images.astype(np.float32)
     df = pd.DataFrame(columns=['Reconstruction'])
 
     labels = pd.unique(test_labels)

@@ -1,4 +1,3 @@
-from utils import save_training_curves
 from utils.plotting import save_training_curves
 from utils.metrics import get_classifcation, get_nln_metrics, save_metrics, accuracy_metrics
 
