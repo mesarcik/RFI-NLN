@@ -18,13 +18,13 @@ discriminator_optimizer = tf.keras.optimizers.Adam(1e-4)
 encoder_optimizer = tf.keras.optimizers.Adam(1e-4)
 
 def ae_loss(x,x_hat,loss_weight):
-    return loss_weight*mse(x,x_hat)
+    return loss_weight*bce(x,x_hat)
 
 def discriminator_loss(real_output, fake_output,loss_weight):
-    return loss_weight*mse(real_output, fake_output)
+    return loss_weight*bce(real_output, fake_output)
 
 def encoder_loss(z,z_hat, loss_weight):
-    return loss_weight*mse(z,z_hat)
+    return loss_weight*bce(z,z_hat)
 
 @tf.function
 def train_step(ae,encoder,discriminator,images):
@@ -92,7 +92,7 @@ def train(ae,encoder,discriminator,dataset,test_images,test_labels, args):
 
     return ae, discriminator,encoder
 
-def main(train_dataset,train_images,train_labels,test_images,test_labels, test_masks, args):
+def main(train_dataset,train_images,train_labels,test_images,test_labels, test_masks, test_masks_orig, args):
     if args.data == 'MVTEC':
         ae = Autoencoder_MVTEC(args)
         discriminator = Discriminator_x_MVTEC(args)
@@ -110,7 +110,7 @@ def main(train_dataset,train_images,train_labels,test_images,test_labels, test_m
                                      test_labels,
                                      args)
 
-    end_routine(train_images, test_images, test_labels, test_masks, [ae,discriminator,encoder], 'GANomaly', args)
+    end_routine(train_images, test_images, test_labels, test_masks, test_masks_orig, [ae,discriminator,encoder], 'GANomaly', args)
 
     
 if __name__  == '__main__':

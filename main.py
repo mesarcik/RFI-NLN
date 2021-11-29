@@ -19,7 +19,8 @@ def main():
             ae_train_labels, 
             test_data, 
             test_labels, 
-            test_masks) = load_hera(cmd_input.args)
+            test_masks,
+            test_masks_orig) = load_hera(cmd_input.args)
 
 
     elif cmd_input.args.data == 'LOFAR':
@@ -48,6 +49,7 @@ def main():
                test_data,
                test_labels, 
                test_masks, 
+               test_masks_orig, 
                cmd_input.args)
 
     train_resnet(ae_train_dataset,
@@ -56,6 +58,7 @@ def main():
              test_data,
              test_labels, 
              test_masks, 
+             test_masks_orig, 
              cmd_input.args)
 
     train_ae(ae_train_dataset,
@@ -64,6 +67,7 @@ def main():
              test_data,
              test_labels, 
              test_masks, 
+             test_masks_orig, 
              cmd_input.args)
 
     train_dae(ae_train_dataset,
@@ -72,6 +76,7 @@ def main():
              test_data,
              test_labels, 
              test_masks, 
+             test_masks_orig, 
              cmd_input.args)
 
     train_ganomaly(ae_train_dataset,
@@ -80,6 +85,7 @@ def main():
              test_data,
              test_labels, 
              test_masks, 
+             test_masks_orig, 
              cmd_input.args)
 
     #train_vae(train_dataset,train_data,train_labels,test_data,test_labels, test_masks, cmd_input.args)

@@ -26,7 +26,6 @@ def load_hera(args):
 
     data = np.expand_dims(data, axis=-1)
     data = process(data, per_image=True).astype(np.float16)
-    masks = np.swapaxes(masks, 1,2)
     masks = np.expand_dims(masks,axis=-1)
 
     (train_data, test_data, 
@@ -39,6 +38,10 @@ def load_hera(args):
     if args.percentage_anomaly is not None:
         _m = np.random.random(train_masks.shape)<args.percentage_anomaly
         train_masks[_m] = np.invert(train_masks[_m])
+
+        _m = np.random.random(test_masks.shape)<args.percentage_anomaly
+        test_masks_orig = test_masks
+        test_masks[_m] = np.invert(test_masks[_m])
 
     if args.limit is not None:
         train_indx = np.random.permutation(len(train_data))[:args.limit]
@@ -55,6 +58,7 @@ def load_hera(args):
         test_data = get_patches(test_data, None, p_size,s_size,rate,'VALID')
         train_masks = get_patches(train_masks, None, p_size,s_size,rate,'VALID').astype(np.bool)
         test_masks= get_patches(test_masks.astype('int') , None, p_size,s_size,rate,'VALID').astype(np.bool)
+        test_masks_orig = get_patches(test_masks_orig.astype('int') , None, p_size,s_size,rate,'VALID').astype(np.bool)
 
         train_labels = np.empty(len(train_data), dtype='object')
         train_labels[np.any(train_masks, axis=(1,2,3))] = args.anomaly_class
@@ -73,16 +77,31 @@ def load_hera(args):
     unet_train_dataset = tf.data.Dataset.from_tensor_slices(train_data).shuffle(BUFFER_SIZE).batch(BATCH_SIZE)
     ae_train_dataset = tf.data.Dataset.from_tensor_slices(ae_train)data).shuffle(BUFFER_SIZE).batch(BATCH_SIZE)
 
-    return (unet_train_dataset,
-            unet_train_data, 
-            unet_train_labels,
-            unet_train_masks, 
-            ae_train_dataset,
-            ae_data, 
-            ae_labels,
-            test_data, 
-            test_labels, 
-            test_masks)
+    if rfi is None:
+        return (unet_train_dataset,
+                unet_train_data, 
+                unet_train_labels,
+                unet_train_masks, 
+                ae_train_dataset,
+                ae_data, 
+                ae_labels,
+                test_data, 
+                test_labels, 
+                test_masks,
+                test_masks)
+    else:
+        return (unet_train_dataset,
+                unet_train_data, 
+                unet_train_labels,
+                unet_train_masks, 
+                ae_train_dataset,
+                ae_data, 
+                ae_labels,
+                test_data, 
+                test_labels, 
+                test_masks,
+                test_masks_orig)
+
 
 def add_HERA_rfi(_data, _masks, args, expand=True, test_labels =None):
     """

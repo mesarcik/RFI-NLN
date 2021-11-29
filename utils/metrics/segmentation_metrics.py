@@ -21,6 +21,7 @@ def accuracy_metrics(model,
                      test_images,
                      test_labels,
                      test_masks,
+                     test_masks_orig,
                      model_type,
                      args):
 
@@ -51,11 +52,12 @@ def accuracy_metrics(model,
     # Get output from model #TODO: do we want to normalise?
     test_data_recon = patches.reconstruct(test_images, args)
     test_masks_recon = patches.reconstruct(test_masks, args)
+    test_masks_orig_recon = patches.reconstruct(test_masks_orig, args)
 
     if model_type =='UNET':
         x_hat = infer(model[0], test_images, args, 'AE')
         x_hat_recon = patches.reconstruct(x_hat, args)
-        unet_auroc, unet_auprc, unet_iou = get_metrics(test_masks_recon, x_hat_recon)
+        unet_auroc, unet_auprc, unet_iou = get_metrics(test_masks_recon, test_masks_orig_recon, x_hat_recon)
 
         fig, axs = plt.subplots(10,3, figsize=(10,7))
         axs[0,0].set_title('Inp',fontsize=5)
@@ -81,7 +83,8 @@ def accuracy_metrics(model,
         neighbours_dist, _, _, _ =  nln(z_train, z_test, None, 'knn', 2, -1)
 
         dists_recon = get_dists(neighbours_dist, args)
-        dknn_auroc, dknn_auprc, dknn_iou = get_metrics(test_masks_recon, 
+        dknn_auroc, dknn_auprc, dknn_iou = get_metrics(test_masks_recon,  
+                                                      test_masks_orig_recon,
                                                       dists_recon)
 
         fig, axs = plt.subplots(10,3, figsize=(10,7))
@@ -143,9 +146,9 @@ def accuracy_metrics(model,
         alpha=0.3
         combined_recon = alpha*normalise(nln_error_recon) + (1-alpha)*normalise(dists_recon)
 
-        nln_auroc, nln_auprc, nln_iou = get_metrics(test_masks_recon, nln_error_recon)
-        dists_auroc, dists_auprc, dists_iou = get_metrics(test_masks_recon, dists_recon)
-        combined_auroc, combined_auprc, combined_iou = get_metrics(test_masks_recon, combined_recon)
+        nln_auroc, nln_auprc, nln_iou = get_metrics(test_masks_recon, test_masks_orig_recon, nln_error_recon)
+        dists_auroc, dists_auprc, dists_iou = get_metrics(test_masks_recon, test_masks_orig_recon, dists_recon)
+        combined_auroc, combined_auprc, combined_iou = get_metrics(test_masks_recon, test_masks_orig_recon, combined_recon)
         nln_aurocs.append(nln_auroc)
         dists_aurocs.append(dists_auroc)
         combined_aurocs.append(combined_auroc)
@@ -191,13 +194,13 @@ def accuracy_metrics(model,
             combined_auprc, 
             combined_iou)
 
-def get_metrics(test_masks_recon, error_recon):
+def get_metrics(test_masks_recon,test_masks_orig_recon, error_recon):
     fpr,tpr, thr = roc_curve(test_masks_recon.flatten()>0, error_recon.flatten())
     auroc = auc(fpr, tpr)
     iou = iou_score(error_recon, test_masks_recon, fpr, tpr, thr)
-    precision, recall, thresholds = precision_recall_curve(test_masks_recon.flatten()>0, 
-                                                          error_recon.flatten())
-    auprc = auc(recall, precision)
+
+    fpr,tpr, thr = roc_curve(test_masks_orig_recon.flatten()>0, error_recon.flatten())
+    auprc = auc(fpr, tpr)
 
     return auroc, auprc, iou
     

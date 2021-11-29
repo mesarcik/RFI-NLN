@@ -13,7 +13,7 @@ from inference import infer
 
 optimizer = tf.keras.optimizers.Adam()
 
-def main(train_dataset,train_images,train_labels,test_images,test_labels, test_masks,args):
+def main(train_dataset,train_images,train_labels,test_images,test_labels, test_masks,test_masks_orig,args):
     if args.data == 'LOFAR':
         s = 256//args.patch_x
 
@@ -31,7 +31,7 @@ def main(train_dataset,train_images,train_labels,test_images,test_labels, test_m
                                           args.model_name)
     os.makedirs(dir_path)
 
-    end_routine(train_images, test_images, test_labels, test_masks, [model], 'DKNN', args)
+    end_routine(train_images, test_images, test_labels, test_masks, test_masks_orig,[model], 'DKNN', args)
 
     
 if __name__  == '__main__':

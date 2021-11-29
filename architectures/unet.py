@@ -57,11 +57,11 @@ def train(unet,train_dataset,train_images, train_masks, test_images,test_labels,
 
     return unet
 
-def main(train_dataset,train_images,train_labels,train_masks,test_images,test_labels, test_masks,args):
+def main(train_dataset,train_images,train_labels,train_masks,test_images,test_labels, test_masks,test_masks_orig, args):
     unet= UNET(args)
 
     unet = train(unet,train_dataset, train_images, train_masks,test_images,test_labels,test_masks,args)
-    end_routine(train_images, test_images, test_labels, test_masks, [unet], 'UNET', args)
+    end_routine(train_images, test_images, test_labels, test_masks, test_masks_orig, [unet], 'UNET', args)
 
     
 if __name__  == '__main__':

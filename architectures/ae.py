@@ -17,7 +17,7 @@ optimizer = tf.keras.optimizers.Adam()
 NNEIGHBOURS= 5
 
 def l2_loss(x,x_hat):
-    return mse(x,x_hat)
+    return bce(x,x_hat)
 
 @tf.function
 def train_step(model, x):
@@ -59,14 +59,14 @@ def train(ae,train_dataset,train_images, test_images,test_labels,args,verbose=Tr
 
     return ae
 
-def main(train_dataset,train_images,train_labels,test_images,test_labels, test_masks,args):
+def main(train_dataset,train_images,train_labels,test_images,test_labels, test_masks,test_masks_orig,args):
     if args.data == 'MVTEC':
         ae = Autoencoder_MVTEC(args)
     else:
         ae = Autoencoder(args)
 
     ae = train(ae,train_dataset, train_images,test_images,test_labels,args)
-    end_routine(train_images, test_images, test_labels, test_masks, [ae], 'AE', args)
+    end_routine(train_images, test_images, test_labels, test_masks, test_masks_orig, [ae], 'AE', args)
 
     
 if __name__  == '__main__':

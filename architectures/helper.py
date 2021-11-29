@@ -1,7 +1,14 @@
 from utils.plotting import save_training_curves
 from utils.metrics import get_classifcation, get_nln_metrics, save_metrics, accuracy_metrics
 
-def end_routine(train_images, test_images, test_labels, test_masks, model, model_type, args):
+def end_routine(train_images, 
+                test_images, 
+                test_labels, 
+                test_masks, 
+                test_masks_orig, 
+                model, 
+                model_type, 
+                args):
 
 #    return None 
     if model_type != 'DKNN':
@@ -15,6 +22,7 @@ def end_routine(train_images, test_images, test_labels, test_masks, model, model
                                                                              test_images,
                                                                              test_labels,
                                                                              test_masks,
+                                                                             test_masks_orig,
                                                                              model_type,
                                                                              args)
 
