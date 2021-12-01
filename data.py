@@ -35,19 +35,15 @@ def load_hera(args):
                                                  masks,
                                                  test_size=0.25, 
                                                  random_state=42)
-    if args.percentage_anomaly is not None:
-        _m = np.random.random(train_masks.shape)<args.percentage_anomaly
-        train_masks[_m] = np.invert(train_masks[_m])
-
-        _m = np.random.random(test_masks.shape)<args.percentage_anomaly
-        test_masks_orig = test_masks
-        test_masks[_m] = np.invert(test_masks[_m])
 
     if args.limit is not None:
         train_indx = np.random.permutation(len(train_data))[:args.limit]
+        test_indx = np.random.permutation(len(test_data))[:args.limit]
 
         train_data  = train_data [train_indx]
         train_masks = train_masks[train_indx]
+        test_data = test_data[test_indx]
+        test_masks = test_masks[test_indx]
 
     if args.patches:
         p_size = (1,args.patch_x, args.patch_y, 1)
@@ -58,7 +54,6 @@ def load_hera(args):
         test_data = get_patches(test_data, None, p_size,s_size,rate,'VALID')
         train_masks = get_patches(train_masks, None, p_size,s_size,rate,'VALID').astype(np.bool)
         test_masks= get_patches(test_masks.astype('int') , None, p_size,s_size,rate,'VALID').astype(np.bool)
-        test_masks_orig = get_patches(test_masks_orig.astype('int') , None, p_size,s_size,rate,'VALID').astype(np.bool)
 
         train_labels = np.empty(len(train_data), dtype='object')
         train_labels[np.any(train_masks, axis=(1,2,3))] = args.anomaly_class
@@ -72,35 +67,32 @@ def load_hera(args):
         ae_train_data  = train_data[np.invert(np.any(train_masks, axis=(1,2,3)))]
         ae_train_labels = train_labels[np.invert(np.any(train_masks, axis=(1,2,3)))]
 
+    test_masks_orig = copy.deepcopy(test_masks)
+    if args.percentage_anomaly is not None:
+        _m = np.random.random(train_masks.shape)<args.percentage_anomaly
+        train_masks[_m] = np.invert(train_masks[_m])
 
+        _m = np.random.random(test_masks.shape)<args.percentage_anomaly
+        test_masks[_m] = np.invert(test_masks[_m])
+
+    ae_train_data = ae_train_data.astype(np.float16) 
+    train_data = train_data.astype(np.float16) 
+    test_data = test_data.astype(np.float16) 
 
     unet_train_dataset = tf.data.Dataset.from_tensor_slices(train_data).shuffle(BUFFER_SIZE).batch(BATCH_SIZE)
-    ae_train_dataset = tf.data.Dataset.from_tensor_slices(ae_train)data).shuffle(BUFFER_SIZE).batch(BATCH_SIZE)
+    ae_train_dataset = tf.data.Dataset.from_tensor_slices(ae_train_data).shuffle(BUFFER_SIZE).batch(BATCH_SIZE)
 
-    if rfi is None:
-        return (unet_train_dataset,
-                unet_train_data, 
-                unet_train_labels,
-                unet_train_masks, 
-                ae_train_dataset,
-                ae_data, 
-                ae_labels,
-                test_data, 
-                test_labels, 
-                test_masks,
-                test_masks)
-    else:
-        return (unet_train_dataset,
-                unet_train_data, 
-                unet_train_labels,
-                unet_train_masks, 
-                ae_train_dataset,
-                ae_data, 
-                ae_labels,
-                test_data, 
-                test_labels, 
-                test_masks,
-                test_masks_orig)
+    return (unet_train_dataset,
+            train_data, 
+            train_labels,
+            train_masks, 
+            ae_train_dataset,
+            ae_train_data, 
+            ae_train_labels,
+            test_data, 
+            test_labels, 
+            test_masks,
+            test_masks_orig)
 
 
 def add_HERA_rfi(_data, _masks, args, expand=True, test_labels =None):

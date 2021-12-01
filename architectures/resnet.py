@@ -14,13 +14,12 @@ from inference import infer
 optimizer = tf.keras.optimizers.Adam()
 
 def main(train_dataset,train_images,train_labels,test_images,test_labels, test_masks,test_masks_orig,args):
-    if args.data == 'LOFAR':
-        s = 256//args.patch_x
+    s = 256//args.patch_x
 
-        inputs = tf.keras.layers.Input(shape=args.input_shape)
-        rgb = tf.keras.layers.Concatenate(axis=-1)( [inputs, inputs,inputs])
-        resize = tf.keras.layers.UpSampling2D(size=(s,s))(rgb)
-        crop = tf.keras.layers.Cropping2D(16)(resize)
+    inputs = tf.keras.layers.Input(shape=args.input_shape)
+    rgb = tf.keras.layers.Concatenate(axis=-1)( [inputs, inputs,inputs])
+    resize = tf.keras.layers.UpSampling2D(size=(s,s))(rgb)
+    crop = tf.keras.layers.Cropping2D(16)(resize)
 
     resnet = tf.keras.applications.resnet.ResNet50(include_top=False, weights='imagenet', input_shape=(224,224,3), pooling='max')(crop)
 

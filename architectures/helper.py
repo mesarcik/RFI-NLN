@@ -11,8 +11,8 @@ def end_routine(train_images,
                 args):
 
 #    return None 
-    if model_type != 'DKNN':
-        save_training_curves(model,args,test_images,test_labels,model_type)
+#    if model_type != 'DKNN':
+#        save_training_curves(model,args,test_images,test_labels,model_type)
 
     
     (ae_auroc, ae_auprc, ae_iou, nln_auroc, nln_auprc, 

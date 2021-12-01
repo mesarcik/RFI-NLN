@@ -8,7 +8,6 @@ def main():
     """
         Reads data and cmd arguments and trains models
     """
-
     if cmd_input.args.data == 'HERA':
         (unet_train_dataset,
             train_data, 
