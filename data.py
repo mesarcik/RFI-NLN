@@ -9,6 +9,7 @@ from sklearn.model_selection import train_test_split
 from utils.data import (get_lofar_data, 
                         _random_crop,
                         process,
+                        corrupt_masks,
                         rgb2gray,
                         get_patched_dataset,
                         get_patches,
@@ -36,14 +37,24 @@ def load_hera(args):
                                                  test_size=0.25, 
                                                  random_state=42)
 
+
     if args.limit is not None:
         train_indx = np.random.permutation(len(train_data))[:args.limit]
         test_indx = np.random.permutation(len(test_data))[:args.limit]
 
         train_data  = train_data [train_indx]
         train_masks = train_masks[train_indx]
-        test_data = test_data[test_indx]
-        test_masks = test_masks[test_indx]
+        #test_data = test_data[test_indx]
+        #test_masks = test_masks[test_indx]
+
+    test_masks_orig = copy.deepcopy(test_masks)
+    if args.percentage_anomaly is not None:
+        if args.percentage_anomaly ==0.1: kernel_size = (2,2)
+        elif args.percentage_anomaly ==0.2: kernel_size = (3,3)
+        elif args.percentage_anomaly ==0.3: kernel_size = (4,4)
+        elif args.percentage_anomaly ==0.4: kernel_size = (5,5)
+        train_masks = corrupt_masks(train_masks,kernel_size)
+        test_masks = corrupt_masks(test_masks,kernel_size )
 
     if args.patches:
         p_size = (1,args.patch_x, args.patch_y, 1)
@@ -54,6 +65,7 @@ def load_hera(args):
         test_data = get_patches(test_data, None, p_size,s_size,rate,'VALID')
         train_masks = get_patches(train_masks, None, p_size,s_size,rate,'VALID').astype(np.bool)
         test_masks= get_patches(test_masks.astype('int') , None, p_size,s_size,rate,'VALID').astype(np.bool)
+        test_masks_orig = get_patches(test_masks_orig.astype('int') , None, p_size,s_size,rate,'VALID').astype(np.bool)
 
         train_labels = np.empty(len(train_data), dtype='object')
         train_labels[np.any(train_masks, axis=(1,2,3))] = args.anomaly_class
@@ -67,13 +79,6 @@ def load_hera(args):
         ae_train_data  = train_data[np.invert(np.any(train_masks, axis=(1,2,3)))]
         ae_train_labels = train_labels[np.invert(np.any(train_masks, axis=(1,2,3)))]
 
-    test_masks_orig = copy.deepcopy(test_masks)
-    if args.percentage_anomaly is not None:
-        _m = np.random.random(train_masks.shape)<args.percentage_anomaly
-        train_masks[_m] = np.invert(train_masks[_m])
-
-        _m = np.random.random(test_masks.shape)<args.percentage_anomaly
-        test_masks[_m] = np.invert(test_masks[_m])
 
     ae_train_data = ae_train_data.astype(np.float16) 
     train_data = train_data.astype(np.float16) 

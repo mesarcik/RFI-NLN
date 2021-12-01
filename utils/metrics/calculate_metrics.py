@@ -67,6 +67,8 @@ def get_classifcation(model_type,
     return auc
 
 def save_metrics(model_type,
+                test_masks,
+                test_masks_orig,
                  args,
                  **kwargs):
     
@@ -109,14 +111,14 @@ def save_metrics(model_type,
         df = pd.read_csv('outputs/results_{}_{}.csv'.format(args.data,
                                                             args.seed))
 
-
+    perc = 1- round(np.sum(test_masks)/np.sum(test_masks_orig),3)
     df = df.append({'Model':model_type,
                     'Name':args.model_name,
                     'Latent_Dim':cmd_input.args.latent_dim,
                     'Patch_Size':args.patch_x,
                     'Class':args.anomaly_class,
                     'Type':args.anomaly_type,
-                    'Percentage Anomaly':args.percentage_anomaly,
+                    'Percentage Anomaly':perc,
                     'RFI':args.rfi,
                     'AUROC':kwargs['ae_auroc'],
                     'AUROC_ORIG':kwargs['ae_auprc'],

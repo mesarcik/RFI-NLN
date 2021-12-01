@@ -3,6 +3,7 @@ import numpy as np
 from sklearn.preprocessing import MinMaxScaler 
 from skimage import transform 
 import tensorflow as tf
+import cv2
 
 def process(data,per_image=True):
     """
@@ -35,6 +36,29 @@ def resize(data, dim):
     """
     #return transform.resize(data,(data.shape[0], dim[0], dim[1], dim[2]), anti_aliasing=False)
     return tf.image.resize(data, [dim[0],dim[1]],antialias=False).numpy()
+
+def corrupt_masks(masks, kernel_size=(5,5)):
+    """
+        Corrupts segmentation maps using cv2 morphology operators
+
+        Parameters
+        ----------
+        masks (np.array) array of rfi masks for data
+        kernel_size (tuple) the kernel size for the operator
+
+        Returns
+        -------
+        np.array
+    """
+    kernel = np.ones(kernel_size ,np.uint8)
+    _masks =  np.empty(masks.shape, dtype=np.bool)
+
+    for i,m in enumerate(masks):
+        img = cv2.cvtColor(m[...,0].astype(np.uint8), cv2.COLOR_GRAY2BGR) 
+        out = cv2.morphologyEx(img, cv2.MORPH_BLACKHAT, kernel)
+        _masks[i,...,0] = out.astype(np.bool)[...,0]
+
+    return _masks  
 
 def rgb2gray(rgb):
     """
