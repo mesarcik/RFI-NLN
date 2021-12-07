@@ -2,4 +2,4 @@
 import sys
 sys.path.insert(1,'../..')
 
-from .aoflagger import flag_hera
+from .ao_flagger import flag_hera

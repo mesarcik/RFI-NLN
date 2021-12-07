@@ -9,13 +9,14 @@ atype=MISO
 patch=64
 ld=16
 
-for percentage in 0.1 0.2 0.3 0.4 
+for thresh in 1 5 10 15
 do
 		python -u main.py -limit $limit \
-						  -data_path /home/mmesarcik/data/HERA/HERA_6_29-11-2021_MIXED.pkl\
+						  -data_path /data/mmesarcik/hera/HERA/HERA_6_29-11-2021_MIXED.pkl\
 						  -anomaly_class rfi\
+						  -rfi_threshold thresh\
 						  -anomaly_type $atype\
-						  -percentage_anomaly $percentage \
+						  -percentage_anomaly 0\
 						  -epochs $epochs \
 						  -latent_dim $ld \
 						  -patches True \

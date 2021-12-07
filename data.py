@@ -6,6 +6,7 @@ from tqdm import tqdm
 #from hera_sim import rfi 
 from model_config import BUFFER_SIZE,BATCH_SIZE
 from sklearn.model_selection import train_test_split
+from utils.flagging import flag_hera
 from utils.data import (get_lofar_data, 
                         _random_crop,
                         process,
@@ -25,9 +26,9 @@ def load_hera(args):
     """
     data, labels, masks, _ =  np.load(args.data_path, allow_pickle=True)
 
-    data = np.expand_dims(data, axis=-1)
     data = process(data, per_image=True).astype(np.float16)
-    masks = np.expand_dims(masks,axis=-1)
+    masks = np.expand_dims(masks,axis=-1) 
+
 
     (train_data, test_data, 
      train_labels, test_labels, 
@@ -36,7 +37,6 @@ def load_hera(args):
                                                  masks,
                                                  test_size=0.25, 
                                                  random_state=42)
-
 
     if args.limit is not None:
         train_indx = np.random.permutation(len(train_data))[:args.limit]
@@ -48,13 +48,9 @@ def load_hera(args):
         #test_masks = test_masks[test_indx]
 
     test_masks_orig = copy.deepcopy(test_masks)
-    if args.percentage_anomaly is not None:
-        if args.percentage_anomaly ==0.1: kernel_size = (2,2)
-        elif args.percentage_anomaly ==0.2: kernel_size = (3,3)
-        elif args.percentage_anomaly ==0.3: kernel_size = (4,4)
-        elif args.percentage_anomaly ==0.4: kernel_size = (5,5)
-        train_masks = corrupt_masks(train_masks,kernel_size)
-        test_masks = corrupt_masks(test_masks,kernel_size )
+    if args.rfi_threshold is not None:
+        test_masks = flag_hera(test_data,args)
+        train_masks = flag_hera(train_data,args)
 
     if args.patches:
         p_size = (1,args.patch_x, args.patch_y, 1)

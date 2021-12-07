@@ -55,6 +55,8 @@ parser.add_argument('-patch_stride_y', metavar='-psy', type=int,
                     help = 'y-dimension of strides of patches')
 parser.add_argument('-rfi', metavar='-rfi', type=float, default=0.0, 
                     help = 'percentage simulated rfi')
+parser.add_argument('-rfi_threshold', metavar='-rfi_threshold', type=float, default=1.0, 
+                    help = 'AOFlagger base threshold')
 
 args = parser.parse_args()
 args.model_name = new_name()

@@ -39,7 +39,7 @@ def resize(data, dim):
 
 def corrupt_masks(masks, kernel_size=(5,5)):
     """
-        Corrupts segmentation maps using cv2 morphology operators
+        Corrupts segmentation maps using cv2 morphology operators, only odd filter sizes work
 
         Parameters
         ----------

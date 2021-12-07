@@ -199,10 +199,10 @@ def get_metrics(test_masks_recon,test_masks_orig_recon, error_recon):
     auroc = auc(fpr, tpr)
     iou = iou_score(error_recon, test_masks_recon, fpr, tpr, thr)
 
-    #fpr,tpr, thr = roc_curve(test_masks_orig_recon.flatten()>0, error_recon.flatten())
-    #auprc = auc(fpr, tpr)
+    fpr,tpr, thr = roc_curve(test_masks_orig_recon.flatten()>0, error_recon.flatten())
+    auprc = auc(fpr, tpr)
 
-    return auroc, -1, iou
+    return auroc, auprc, iou
     
 def get_threshold(fpr,tpr,thr,flag,test_labels,error,anomaly_class):
     """
