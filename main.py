@@ -32,7 +32,8 @@ def main():
             ae_train_labels, 
             test_data, 
             test_labels, 
-            test_masks) = load_lofar(cmd_input.args)
+            test_masks,
+            test_masks_orig) = load_lofar(cmd_input.args)
 
 
     print(" __________________________________ \n Latent dimensionality {}".format(

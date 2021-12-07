@@ -214,5 +214,6 @@ def load_lofar(args):
             ae_train_labels, 
             test_data, 
             test_labels, 
+            test_masks,
             test_masks)
 
