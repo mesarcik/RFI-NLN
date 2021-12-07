@@ -29,6 +29,8 @@ def end_routine(train_images,
     
 
     save_metrics(model_type,
+                 test_masks,
+                 test_masks_orig,
                  args,
                  ae_auroc=ae_auroc,
                  ae_auprc=ae_auprc,
