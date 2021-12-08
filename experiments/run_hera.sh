@@ -9,12 +9,12 @@ atype=MISO
 patch=64
 ld=16
 
-for thresh in 1 5 10 15
+for thresh in 1.0 5.0 10.0 15.0
 do
 		python -u main.py -limit $limit \
 						  -data_path /data/mmesarcik/hera/HERA/HERA_6_29-11-2021_MIXED.pkl\
 						  -anomaly_class rfi\
-						  -rfi_threshold thresh\
+						  -rfi_threshold $thresh\
 						  -anomaly_type $atype\
 						  -percentage_anomaly 0\
 						  -epochs $epochs \
@@ -29,7 +29,7 @@ do
 						  -data HERA \
 						  -neighbors 1 2 5 10 \
 						  -algorithm knn\
-						  -seed $d$seed | tee -a hera.log 
+						  -seed 12-07-2021-05-48_51f6b9 | tee -a hera.log 
 done 
 
 #python report.py -data HERA -seed $d$seed -anomaly_type $atype

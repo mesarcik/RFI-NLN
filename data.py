@@ -26,7 +26,7 @@ def load_hera(args):
     """
     data, labels, masks, _ =  np.load(args.data_path, allow_pickle=True)
 
-    data = process(data, per_image=True).astype(np.float16)
+    data = np.expand_dims(data, axis=-1)
     masks = np.expand_dims(masks,axis=-1) 
 
 
@@ -51,6 +51,12 @@ def load_hera(args):
     if args.rfi_threshold is not None:
         test_masks = flag_hera(test_data,args)
         train_masks = flag_hera(train_data,args)
+
+    test_masks = np.expand_dims(test_masks,axis=-1) 
+    train_masks = np.expand_dims(train_masks,axis=-1) 
+
+    test_data =  process(test_data, per_image=True).astype(np.float16)
+    train_data = process(train_data, per_image=True).astype(np.float16)
 
     if args.patches:
         p_size = (1,args.patch_x, args.patch_y, 1)

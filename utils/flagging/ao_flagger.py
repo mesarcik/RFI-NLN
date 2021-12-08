@@ -19,8 +19,8 @@ def flag_hera(data, args):
     mask = np.empty(data[...,0].shape, dtype=np.bool)
 
     aoflagger = aof.AOFlagger()
-    strategy = aoflagger.load_strategy_file('./stratergies/wsrt-{}.lua'.format(
-                                                                args.rfi_threshold))
+    strategy = aoflagger.load_strategy_file('utils/flagging/stratergies/wsrt-{}.lua'.format(
+                                                                int(args.rfi_threshold)))
 
 
     # LOAD data into AOFlagger structure
