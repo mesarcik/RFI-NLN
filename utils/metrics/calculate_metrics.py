@@ -95,23 +95,40 @@ def save_metrics(model_type,
                                      'Type',
                                      'Percentage Anomaly',
                                      'RFI',
-                                     'AUROC',
-                                     'AUROC_ORIG',
-                                     'IOU',
-                                     'NLN_AUROC',
-                                     'NLN_AUROC_ORIG',
-                                     'NLN_IOU',
-                                     'DIST_AUROC',
-                                     'DIST_AUROC_ORIG',
-                                     'DIST_IOU',
-                                     'COMBINED_AUROC',
-                                     'COMBINED_AUROC_ORIG',
-                                     'COMBINED_IOU'])
+
+                                     'AUROC_AO',
+                                     'AUROC_TRUE',
+                                     'AUPRC_AO',
+                                     'AUPRC_TRUE',
+                                     'IOU_AO',
+                                     'IOU_TRUE',
+
+                                     'NLN_AUROC_AO',
+                                     'NLN_AUROC_TRUE',
+                                     'NLN_AUPRC_AO',
+                                     'NLN_AUPRC_TRUE',
+                                     'NLN_IOU_AO',
+                                     'NLN_IOU_TRUE',
+
+
+                                     'DISTS_AUROC_AO',
+                                     'DISTS_AUROC_TRUE',
+                                     'DISTS_AUPRC_AO',
+                                     'DISTS_AUPRC_TRUE',
+                                     'DISTS_IOU_AO',
+                                     'DISTS_IOU_TRUE',
+
+                                     'COMBINED_AUROC_AO',
+                                     'COMBINED_AUROC_TRUE',
+                                     'COMBINED_AUPRC_AO',
+                                     'COMBINED_AUPRC_TRUE',
+                                     'COMBINED_IOU_AO',
+                                     'COMBINED_IOU_TRUE'])
     else:  
         df = pd.read_csv('outputs/results_{}_{}.csv'.format(args.data,
                                                             args.seed))
 
-    perc = 1- round(np.sum(test_masks)/np.sum(test_masks_orig),3)
+    perc = round(((np.sum(test_masks) - np.sum(test_masks_orig))/np.prod(test_masks_orig.shape)),3)
     df = df.append({'Model':model_type,
                     'Name':args.model_name,
                     'Latent_Dim':cmd_input.args.latent_dim,
@@ -120,20 +137,36 @@ def save_metrics(model_type,
                     'Type':args.anomaly_type,
                     'Percentage Anomaly':perc,
                     'RFI':args.rfi,
-                    'AUROC':kwargs['ae_auroc'],
-                    'AUROC_ORIG':kwargs['ae_auprc'],
-                    'IOU':kwargs['ae_iou'],
-                    'NLN_AUROC':kwargs['nln_auroc'],
-                    'NLN_AUROC_ORIG':kwargs['nln_auprc'],
-                    'NLN_IOU':kwargs['nln_iou'],
-                    'DIST_AUROC':kwargs['dists_auroc'],
-                    'DIST_AUROC_ORIG':kwargs['dists_auprc'],
-                    'DIST_IOU':kwargs['dists_iou'],
-                    'COMBINED_AUROC':kwargs['combined_auroc'],
-                    'COMBINED_AUROC_ORIG':kwargs['combined_auprc'],
-                    'COMBINED_IOU':kwargs['combined_iou']
-                    },
-                     ignore_index=True)
+
+
+                     'AUROC_AO':   kwargs['ae_ao_auroc']  ,
+                     'AUROC_TRUE': kwargs['ae_true_auroc'] ,
+                     'AUPRC_AO':   kwargs['ae_ao_auprc']  ,
+                     'AUPRC_TRUE': kwargs['ae_true_auprc'] ,
+                     'IOU_AO':     kwargs['ae_ao_iou']    ,
+                     'IOU_TRUE':   kwargs['ae_true_iou']  ,
+
+                     'NLN_AUROC_AO':   kwargs['nln_ao_auroc']  ,
+                     'NLN_AUROC_TRUE': kwargs['nln_true_auroc'] ,
+                     'NLN_AUPRC_AO':   kwargs['nln_ao_auprc']  ,
+                     'NLN_AUPRC_TRUE': kwargs['nln_true_auprc'] ,
+                     'NLN_IOU_AO':     kwargs['nln_ao_iou']    ,
+                     'NLN_IOU_TRUE':   kwargs['nln_true_iou']  ,
+
+                     'DISTS_AUROC_AO':   kwargs['dists_ao_auroc']  ,
+                     'DISTS_AUROC_TRUE': kwargs['dists_true_auroc'] ,
+                     'DISTS_AUPRC_AO':   kwargs['dists_ao_auprc']  ,
+                     'DISTS_AUPRC_TRUE': kwargs['dists_true_auprc'] ,
+                     'DISTS_IOU_AO':     kwargs['dists_ao_iou']    ,
+                     'DISTS_IOU_TRUE':   kwargs['dists_true_iou']  ,
+
+                     'COMBINED_AUROC_AO':   kwargs['combined_ao_auroc']  ,
+                     'COMBINED_AUROC_TRUE': kwargs['combined_true_auroc'] ,
+                     'COMBINED_AUPRC_AO':   kwargs['combined_ao_auprc']  ,
+                     'COMBINED_AUPRC_TRUE': kwargs['combined_true_auprc'] ,
+                     'COMBINED_IOU_AO':     kwargs['combined_ao_iou']    ,
+                     'COMBINED_IOU_TRUE':   kwargs['combined_true_iou']
+                      }, ignore_index=True)
 
     df.to_csv('outputs/results_{}_{}.csv'.format(args.data,
                                                  args.seed),index=False)

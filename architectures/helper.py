@@ -13,18 +13,25 @@ def end_routine(train_images,
 #    return None 
 #    if model_type != 'DKNN':
 #        save_training_curves(model,args,test_images,test_labels,model_type)
-
-    
-    (ae_auroc, ae_auprc, ae_iou, nln_auroc, nln_auprc, 
-            nln_iou, dists_auroc, dists_auprc, dists_iou,
-            combined_auroc, combined_auprc, combined_iou) = accuracy_metrics(model,
-                                                                             train_images,
-                                                                             test_images,
-                                                                             test_labels,
-                                                                             test_masks,
-                                                                             test_masks_orig,
-                                                                             model_type,
-                                                                             args)
+    (ae_ao_auroc,  ae_true_auroc, 
+     ae_ao_auprc,  ae_true_auprc,      
+     ae_ao_iou,    ae_true_iou,
+     nln_ao_auroc, nln_true_auroc, 
+     nln_ao_auprc, nln_true_auprc,      
+     nln_ao_iou,   nln_true_iou,
+     dists_ao_auroc, dists_true_auroc, 
+     dists_ao_auprc, dists_true_auprc,      
+     dists_ao_iou,   dists_true_iou,
+     combined_ao_auroc, combined_true_auroc, 
+     combined_ao_auprc, combined_true_auprc,      
+     combined_ao_iou,   combined_true_iou) = accuracy_metrics(model,
+                                                              train_images,
+                                                              test_images,
+                                                              test_labels,
+                                                              test_masks,
+                                                              test_masks_orig,
+                                                              model_type,
+                                                              args)
 
     
 
@@ -32,16 +39,32 @@ def end_routine(train_images,
                  test_masks,
                  test_masks_orig,
                  args,
-                 ae_auroc=ae_auroc,
-                 ae_auprc=ae_auprc,
-                 ae_iou=ae_iou,
-                 nln_auroc=nln_auroc,
-                 nln_auprc=nln_auprc, 
-                 nln_iou=nln_iou,
-                 dists_auroc=dists_auroc,
-                 dists_auprc=dists_auprc, 
-                 dists_iou=dists_iou,
-                 combined_auroc=combined_auroc,
-                 combined_auprc=combined_auprc, 
-                 combined_iou=combined_iou)
+
+                 ae_ao_auroc=   ae_ao_auroc,
+                 ae_true_auroc= ae_true_auroc,
+                 ae_ao_auprc=   ae_ao_auprc,
+                 ae_true_auprc= ae_true_auprc,
+                 ae_ao_iou=     ae_ao_iou,
+                 ae_true_iou=   ae_true_iou,
+
+                 nln_ao_auroc=   nln_ao_auroc,
+                 nln_true_auroc= nln_true_auroc,
+                 nln_ao_auprc=   nln_ao_auprc,
+                 nln_true_auprc= nln_true_auprc,
+                 nln_ao_iou=     nln_ao_iou,
+                 nln_true_iou=   nln_true_iou,
+
+                 dists_ao_auroc=   dists_ao_auroc,
+                 dists_true_auroc= dists_true_auroc,
+                 dists_ao_auprc=   dists_ao_auprc,
+                 dists_true_auprc= dists_true_auprc,
+                 dists_ao_iou=     dists_ao_iou,
+                 dists_true_iou=   dists_true_iou,
+
+                 combined_ao_auroc=   combined_ao_auroc,
+                 combined_true_auroc= combined_true_auroc,
+                 combined_ao_auprc=   combined_ao_auprc,
+                 combined_true_auprc= combined_true_auprc,
+                 combined_ao_iou=     combined_ao_iou,
+                 combined_true_iou=   combined_true_iou)
 
