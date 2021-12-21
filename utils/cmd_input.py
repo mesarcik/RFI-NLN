@@ -53,6 +53,10 @@ parser.add_argument('-patch_stride_x', metavar='-psx', type=int,
                     help = 'x-dimension of strides of patches')
 parser.add_argument('-patch_stride_y', metavar='-psy', type=int, 
                     help = 'y-dimension of strides of patches')
+parser.add_argument('-rfi', metavar='-rfi', type=float, default=0.0, 
+                    help = 'percentage simulated rfi')
+parser.add_argument('-rfi_threshold', metavar='-rfi_threshold', type=float, default=1.0, 
+                    help = 'AOFlagger base threshold')
 
 args = parser.parse_args()
 args.model_name = new_name()
@@ -65,7 +69,7 @@ elif args.data == 'CIFAR10':
     args.input_shape =(32,32,3)
 
 elif args.data == 'HERA':
-    args.input_shape =(64,256,1)
+    args.input_shape =(64, 256,1)
 
 elif args.data == 'LOFAR':
     args.input_shape =(128,64,1)

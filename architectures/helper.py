@@ -1,61 +1,70 @@
-from utils import save_training_curves
 from utils.plotting import save_training_curves
 from utils.metrics import get_classifcation, get_nln_metrics, save_metrics, accuracy_metrics
 
-def end_routine(train_images, test_images, test_labels, test_masks, model, model_type, args):
+def end_routine(train_images, 
+                test_images, 
+                test_labels, 
+                test_masks, 
+                test_masks_orig, 
+                model, 
+                model_type, 
+                args):
 
-    return None 
-#    save_training_curves(model,args,test_images,test_labels,model_type)
-#
-#    (auc_latent, neighbour, radius, dists_auc,
-#        sum_auc, mul_auc, x_hat, x_hat_train,
-#        neighbours_idx, neighbours_dist) = get_nln_metrics(model,   
-#                                                           train_images, 
-#                                                           test_images, 
-#                                                           test_labels, 
-#                                                           model_type, 
-#                                                           args)
-#    
-#    auc_recon = get_classifcation(model_type,
-#                                  model,
-#                                  test_images,
-#                                  test_labels,
-#                                  args)
-#    if (args.data == 'MVTEC') or (args.data == 'HERA') or (args.data == 'LOFAR'):
-#        seg_auc, seg_auc_nln, dists_auc, seg_dists_auc, seg_prc, seg_prc_nln, seg_iou, seg_iou_nln  = accuracy_metrics(model,
-#                                                                                                                        train_images,
-#                                                                                                                        test_images,
-#                                                                                                                        test_labels,
-#                                                                                                                        test_masks,
-#                                                                                                                        model_type,
-#                                                                                                                        neighbour,
-#                                                                                                                        radius,
-#                                                                                                                        args)
-#    else:
-#        seg_auc = 'n/a'
-#        seg_auc_nln = 'n/a'
-#        seg_dists_auc = 'n/a'
-#        seg_prc = 'n/a'
-#        seg_prc_nln = 'n/a' 
-#        seg_iou  = 'n/a'
-#        seg_iou_nln = 'n/a'
-#
-#
-#    save_metrics(model_type,
-#                 args,
-#                 auc_recon, 
-#                 seg_prc,
-#                 neighbour,
-#                 radius,
-#                 auc_latent,
-#                 seg_prc_nln,
-#                 seg_auc,
-#                 seg_auc_nln,
-#                 seg_iou,
-#                 seg_iou_nln,
-#                 dists_auc,
-#                 seg_dists_auc,
-#                 sum_auc,
-#                 mul_auc)
-#
-#
+#    return None 
+#    if model_type != 'DKNN':
+#        save_training_curves(model,args,test_images,test_labels,model_type)
+    (ae_ao_auroc,  ae_true_auroc, 
+     ae_ao_auprc,  ae_true_auprc,      
+     ae_ao_iou,    ae_true_iou,
+     nln_ao_auroc, nln_true_auroc, 
+     nln_ao_auprc, nln_true_auprc,      
+     nln_ao_iou,   nln_true_iou,
+     dists_ao_auroc, dists_true_auroc, 
+     dists_ao_auprc, dists_true_auprc,      
+     dists_ao_iou,   dists_true_iou,
+     combined_ao_auroc, combined_true_auroc, 
+     combined_ao_auprc, combined_true_auprc,      
+     combined_ao_iou,   combined_true_iou) = accuracy_metrics(model,
+                                                              train_images,
+                                                              test_images,
+                                                              test_labels,
+                                                              test_masks,
+                                                              test_masks_orig,
+                                                              model_type,
+                                                              args)
+
+    
+
+    save_metrics(model_type,
+                 test_masks,
+                 test_masks_orig,
+                 args,
+
+                 ae_ao_auroc=   ae_ao_auroc,
+                 ae_true_auroc= ae_true_auroc,
+                 ae_ao_auprc=   ae_ao_auprc,
+                 ae_true_auprc= ae_true_auprc,
+                 ae_ao_iou=     ae_ao_iou,
+                 ae_true_iou=   ae_true_iou,
+
+                 nln_ao_auroc=   nln_ao_auroc,
+                 nln_true_auroc= nln_true_auroc,
+                 nln_ao_auprc=   nln_ao_auprc,
+                 nln_true_auprc= nln_true_auprc,
+                 nln_ao_iou=     nln_ao_iou,
+                 nln_true_iou=   nln_true_iou,
+
+                 dists_ao_auroc=   dists_ao_auroc,
+                 dists_true_auroc= dists_true_auroc,
+                 dists_ao_auprc=   dists_ao_auprc,
+                 dists_true_auprc= dists_true_auprc,
+                 dists_ao_iou=     dists_ao_iou,
+                 dists_true_iou=   dists_true_iou,
+
+                 combined_ao_auroc=   combined_ao_auroc,
+                 combined_true_auroc= combined_true_auroc,
+                 combined_ao_auprc=   combined_ao_auprc,
+                 combined_true_auprc= combined_true_auprc,
+                 combined_ao_iou=     combined_ao_iou,
+                 combined_true_iou=   combined_true_iou)
+

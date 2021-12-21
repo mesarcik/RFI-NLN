@@ -9,9 +9,10 @@ from sklearn.metrics import (roc_curve,
                              precision_recall_curve)
 from inference import infer, get_error
 from utils import cmd_input 
-from utils.data import patches,sizes, reconstruct
+from utils.data import *
 from utils.metrics import nln, get_nln_errors
 from reporting import plot_neighs
+from matplotlib import pyplot as plt
 
 import time
 
@@ -20,9 +21,8 @@ def accuracy_metrics(model,
                      test_images,
                      test_labels,
                      test_masks,
+                     test_masks_orig,
                      model_type,
-                     max_neighbours,
-                     max_radius,
                      args):
 
     """
@@ -37,21 +37,102 @@ def accuracy_metrics(model,
         test_masks (np.array): ground truth masks for the testing images
         model_type (str): the type of model (AE,VAE,...)
         args (Namespace): the argumenets from cmd_args
-        max_neighbours (int): number of neighbours resulting in best AUROC
-        max_radius (double): size of radius resulting in best AUROC
 
         Returns
         -------
         seg_auc (float32): segmentation auroc 
         seg_auc_nln (float32): segmentation auroc using NLN
-        dists_auc (float32): detection auroc using dists
-        seg_dists_auc (float32): segmentation auroc using dists
+        dists_auroc (float32): detection auroc using dists
+        seg_dists_auroc (float32): segmentation auroc using dists
         seg_prc (float32): segmetnation auprc 
         seg_prc_nln (float32): segmentation auprc using nln
         seg_iou (float32): iou score for reconstruction
         seg_iou_nln (float32): iou score for nln
     """
     # Get output from model #TODO: do we want to normalise?
+    test_data_recon = patches.reconstruct(test_images, args)
+    test_masks_recon = patches.reconstruct(test_masks, args)
+    test_masks_orig_recon = patches.reconstruct(test_masks_orig, args)
+
+    if model_type =='UNET':
+        x_hat = infer(model[0], test_images, args, 'AE')
+        x_hat_recon = patches.reconstruct(x_hat, args)
+
+        (unet_ao_auroc, unet_true_auroc, 
+         unet_ao_auprc, unet_true_auprc,      
+         unet_ao_iou, unet_true_iou) = get_metrics(test_masks_recon, 
+                                                   test_masks_orig_recon, 
+                                                   x_hat_recon)
+
+
+        fig, axs = plt.subplots(10,3, figsize=(10,7))
+        axs[0,0].set_title('Inp',fontsize=5)
+        axs[0,1].set_title('Mask',fontsize=5)
+        axs[0,2].set_title('Recon {}'.format(unet_ao_auroc),fontsize=5)
+
+        for i in range(10):
+            r = np.random.randint(len(test_data_recon))
+            axs[i,0].imshow(test_data_recon[r,...,0].astype(np.float32))
+            axs[i,1].imshow(test_masks_recon[r,...,0].astype(np.float32))
+            axs[i,2].imshow(x_hat_recon[r,...,0].astype(np.float32))
+        plt.savefig('outputs/{}/{}/{}/neighbours.png'.format(model_type,
+                                                       args.anomaly_class,
+                                                       args.model_name), dpi=300)
+        return (unet_ao_auroc, unet_true_auroc, 
+         unet_ao_auprc, unet_true_auprc,      
+         unet_ao_iou, unet_true_iou,
+         -1, -1, 
+         -1, -1,      
+         -1, -1,
+         -1, -1, 
+         -1, -1,      
+         -1, -1,
+         -1, -1, 
+         -1, -1,      
+         -1, -1)
+
+    elif model_type =='DKNN':
+        z_train = infer(model[0], train_images, args, 'DKNN')
+        z_test = infer(model[0], test_images, args, 'DKNN')
+
+
+        neighbours_dist, _, _, _ =  nln(z_train, z_test, None, 'knn', 2, -1)
+
+        dists_recon = get_dists(neighbours_dist, args)
+
+        (dknn_ao_auroc, dknn_true_auroc, 
+         dknn_ao_auprc, dknn_true_auprc,      
+         dknn_ao_iou,   dknn_true_iou) = get_metrics(test_masks_recon, 
+                                                     test_masks_orig_recon, 
+                                                     dists_recon)
+
+        fig, axs = plt.subplots(10,3, figsize=(10,7))
+        axs[0,0].set_title('Inp',fontsize=5)
+        axs[0,1].set_title('Mask',fontsize=5)
+        axs[0,2].set_title('Recon {}'.format(dknn_ao_auroc),fontsize=5)
+
+        for i in range(10):
+            r = np.random.randint(len(test_data_recon))
+            axs[i,0].imshow(test_data_recon[r,...,0].astype(np.float32))
+            axs[i,1].imshow(test_masks_recon[r,...,0].astype(np.float32))
+            axs[i,2].imshow(dists_recon[r,...,0].astype(np.float32))
+        plt.savefig('outputs/{}/{}/{}/neighbours.png'.format(model_type,
+                                                       args.anomaly_class,
+                                                       args.model_name), dpi=300)
+
+        return (dknn_ao_auroc, dknn_true_auroc, 
+                dknn_ao_auprc, dknn_true_auprc,      
+                dknn_ao_iou, dknn_true_iou,
+                -1, -1, 
+                -1, -1,      
+                -1, -1,
+                -1, -1, 
+                -1, -1,      
+                -1, -1,
+                -1, -1, 
+                -1, -1,      
+                -1, -1)
+
     z = infer(model[0].encoder, train_images, args, 'encoder')
     z_query = infer(model[0].encoder, test_images, args, 'encoder')
 
@@ -60,23 +141,20 @@ def accuracy_metrics(model,
 
     error = get_error('AE', test_images, x_hat,mean=False)
 
-    if args.patches:
-        error_recon, labels_recon  = patches.reconstruct(error, args, test_labels) 
-        masks_recon = patches.reconstruct(np.expand_dims(test_masks,axis=-1), args)[...,0] 
-    else: 
-        error_recon, labels_recon, masks_recon  = error, test_labels, test_masks 
+    error_recon, labels_recon  = patches.reconstruct(error, args, test_labels) 
 
-    print('Original With Reconstruction')
-    error_agg =  np.mean(error_recon ,axis=tuple(range(1,error_recon.ndim)))
-    cl_auc , normal_accuracy, anomalous_accuracy = get_acc(args.anomaly_class, labels_recon, error_agg)
-    
-    seg_auc, seg_prc = get_segmentation(error_recon, masks_recon, labels_recon, args)
-    seg_iou= -1#iou_score(error_recon, masks_recon)
+    (ae_ao_auroc, ae_true_auroc, 
+     ae_ao_auprc, ae_true_auprc,      
+     ae_ao_iou,   ae_true_iou) = get_metrics(test_masks_recon, 
+                                             test_masks_orig_recon, 
+                                             error_recon)
 
 
-    seg_auc_nlns, seg_prc_nlns, dist_aucs, seg_aucs_dist, seg_iou_nlns = [], [], [], [],[]
-    print('NLN With Reconstruction')
+
+    nln_true_aurocs, dists_true_aurocs, combined_true_aurocs = [], [], []
+    nln_ao_aurocs, dists_ao_aurocs, combined_ao_aurocs = [], [], []
     for n in args.neighbors:
+        print('Neighbours = {}'.format(n))
         neighbours_dist, neighbours_idx, x_hat_train, neighbour_mask =  nln(z, 
                                                                             z_query, 
                                                                             x_hat_train, 
@@ -102,119 +180,117 @@ def accuracy_metrics(model,
         else: nln_error_recon = nln_error
         
 
-        error_agg =  np.mean(nln_error_recon ,axis=tuple(range(1,nln_error_recon.ndim)))
-        cl_auc_nln , normal_accuracy_nln, anomalous_accuracy_nln = get_acc(args.anomaly_class,labels_recon, error_agg)
-        iou_nln = -1#iou_score(nln_error_recon, masks_recon)
-        seg_iou_nlns.append(iou_nln)
-
-        seg_auc_nln,seg_prc_nln = get_segmentation(nln_error_recon, masks_recon, labels_recon, args)
-        seg_auc_nlns.append(seg_auc_nln)
-        seg_prc_nlns.append(seg_prc_nln)
-
         dists_recon = get_dists(neighbours_dist, args)
+        alpha=0.3
+        combined_recon = alpha*normalise(nln_error_recon) + (1-alpha)*normalise(dists_recon)
 
-        dists = np.max(dists_recon, axis = tuple(range(1,dists_recon.ndim)))
-        dists= roc_auc_score(labels_recon== args.anomaly_class, dists) 
-        if args.patches:
-            dists_seg,_ = get_segmentation(dists_recon, masks_recon, labels_recon, args)
-            seg_aucs_dist.append(dists_seg)
-        else:
-            seg_aucs_dist.append(-1)
-
-        dist_aucs.append(dists)
-
-        print('\nDists AUC = {}\n'.format(dists))
+        (nln_ao_auroc, nln_true_auroc, 
+         nln_ao_auprc, nln_true_auprc,      
+         nln_ao_iou,   nln_true_iou) = get_metrics(test_masks_recon, 
+                                                   test_masks_orig_recon, 
+                                                   nln_error_recon)
 
 
-    seg_auc_nln = max(seg_auc_nlns)
-    seg_prc_nln = max(seg_prc_nlns)
-    dists_auc = max(dist_aucs)
-    seg_dists_auc = max(seg_aucs_dist)
-    seg_iou_nln = max(seg_iou_nlns)
+        (dists_ao_auroc, dists_true_auroc, 
+         dists_ao_auprc, dists_true_auprc,      
+         dists_ao_iou,   dists_true_iou) = get_metrics(test_masks_recon, 
+                                                       test_masks_orig_recon, 
+                                                       dists_recon)
 
-    print('Max seg_auc neighbor= {}\nMax seg_prc neighbor={}\nMax dist_uac neighbor ={}\nMax seg_iou neigh={}'.format(
-                                                                                    args.neighbors[np.argmax(seg_auc_nlns)],
-                                                                                    args.neighbors[np.argmax(seg_prc_nlns)],
-                                                                                    args.neighbors[np.argmax(dist_aucs)],
-                                                                                    args.neighbors[np.argmax(seg_aucs_dist)],
-                                                                                    args.neighbors[np.argmax(seg_iou_nlns)],
-                                                                                    ))
-    with open("outputs/neighbour_results.csv", "a") as myfile:
-        myfile.write('{},{},{},{},{},{},{}\n'.format(model_type, 
-                                                     args.anomaly_class, 
-                                                     round(seg_auc_nln,3), 
-                                                     args.neighbors[np.argmax(seg_auc_nlns)],
-                                                     round(seg_prc_nln,3),
-                                                     args.neighbors[np.argmax(seg_prc_nlns)],
-                                                     round(dists_auc,3),
-                                                     args.neighbors[np.argmax(dist_aucs)],
-                                                     round(seg_dists_auc,3),
-                                                     args.neighbors[np.argmax(dist_aucs)],
-                                                     round(seg_iou_nln,3),
-                                                     args.neighbors[np.argmax(seg_iou_nlns)],
-                                                     ))
+        (combined_ao_auroc, combined_true_auroc, 
+         combined_ao_auprc, combined_true_auprc,      
+         combined_ao_iou,   combined_true_iou) = get_metrics(test_masks_recon, 
+                                                       test_masks_orig_recon, 
+                                                       combined_recon)
+        nln_ao_aurocs.append(nln_ao_auroc)
+        nln_true_aurocs.append(nln_true_auroc)
+        dists_ao_aurocs.append(dists_ao_auroc)
+        dists_true_aurocs.append(dists_true_auroc)
+        combined_ao_aurocs.append(combined_ao_auroc)
+        combined_true_aurocs.append(combined_true_auroc)
 
-    plot_neighs(test_images, test_labels, test_masks, x_hat, x_hat_train[neighbours_idx], neighbours_dist, model_type, args)
-    
-    return seg_auc, seg_auc_nln, dists_auc, seg_dists_auc, seg_prc, seg_prc_nln, seg_iou, seg_iou_nln
+    dists_ao_auroc = np.max(dists_ao_aurocs)    
+    dists_true_auroc = np.max(dists_true_aurocs)    
+    n_dist = args.neighbors[np.argmax(dists_ao_aurocs)]
 
-def get_segmentation(error, test_masks, test_labels, args):
-    """
-        Calculates AUROC result of segmentation
+    nln_ao_auroc = np.max(nln_ao_aurocs)    
+    nln_true_auroc = np.max(nln_true_aurocs)    
+    n_nln = args.neighbors[np.argmax(nln_ao_aurocs)]
 
-        Parameters
-        ----------
-        error (np.array): input-output
-        test_masks (np.array): ground truth segmentation masks 
-        test_labels (np.array): ground truth labels  
-        args (Namespace): cmd_input args
+    combined_ao_auroc = np.max(combined_ao_aurocs)    
+    combined_true_auroc = np.max(combined_true_aurocs)    
+    n_combined= args.neighbors[np.argmax(combined_ao_aurocs)]
 
-        Returns
-        -------
-        auc (float32): AUROC for segmentation
-        prc (float32): AUPRC for segmentation
-        
-    """
-    fpr, tpr, thr  = roc_curve(test_masks.flatten()>0, np.max(error,axis=-1).flatten())
-    precision, recall, thresholds = precision_recall_curve(test_masks.flatten()>0, np.max(error,axis=-1).flatten())
-    prc = auc(recall, precision)
-    AUC= roc_auc_score(test_masks.flatten()>0, np.mean(error,axis=-1).flatten())
+    fig, axs = plt.subplots(10,6, figsize=(10,7))
+    axs[0,0].set_title('Inp',fontsize=5)
+    axs[0,1].set_title('Mask',fontsize=5)
+    axs[0,2].set_title('Recon {}'.format(ae_ao_auroc),fontsize=5)
+    axs[0,3].set_title('NLN {} {}'.format(nln_ao_auroc, n_nln),fontsize=5)
+    axs[0,4].set_title('Dist {} {}'.format(dists_ao_auroc, n_dist),fontsize=5)
+    axs[0,5].set_title('Combined {} {}'.format(combined_ao_auroc, n_combined),fontsize=5)
 
-    return AUC,prc
+    for i in range(10):
+        r = np.random.randint(len(test_data_recon))
+        axs[i,0].imshow(test_data_recon[r,...,0].astype(np.float32))
+        axs[i,1].imshow(test_masks_recon[r,...,0].astype(np.float32))
+        axs[i,2].imshow(error_recon[r,...,0].astype(np.float32))
+        axs[i,3].imshow(nln_error_recon[r,...,0].astype(np.float32))
+        axs[i,4].imshow(dists_recon[r,...,0].astype(np.float32))
+        axs[i,5].imshow(combined_recon[r,...,0].astype(np.float32))
+    plt.savefig('outputs/{}/{}/{}/neighbours.png'.format(model_type,
+                                                   args.anomaly_class,
+                                                   args.model_name), dpi=300)
 
-def get_acc(anomaly_class, test_labels, error):
-    """
-        Calculates get accuracy for anomaly detection  
 
-        Parameters
-        ----------
-        anomaly_class (str):  name of anomalous class 
-        error (np.array): input-output
-        test_labels (np.array): ground truth labels  
+    return (ae_ao_auroc,  ae_true_auroc, 
+            ae_ao_auprc,  ae_true_auprc,      
+            ae_ao_iou,    ae_true_iou,
+            nln_ao_auroc, nln_true_auroc, 
+            nln_ao_auprc, nln_true_auprc,      
+            nln_ao_iou,   nln_true_iou,
+            dists_ao_auroc, dists_true_auroc, 
+            dists_ao_auprc, dists_true_auprc,      
+            dists_ao_iou,   dists_true_iou,
+            combined_ao_auroc, combined_true_auroc, 
+            combined_ao_auprc, combined_true_auprc,      
+            combined_ao_iou,   combined_true_iou)
 
-        Returns
-        -------
-        auc (float32): AUROC for segmentation
-        normal_accuracy (float32): Accuracy of detecting normal samples
-        anomalous_accuracy(float32): Accuracy of detecting anomalous samples 
-        
-    """
-    # Find AUROC threshold that optimises max(TPR-FPR)
-    print(anomaly_class)
-    fpr, tpr, thr  = roc_curve(test_labels == anomaly_class, error)
-    AUC= roc_auc_score(test_labels==anomaly_class,error)
+def get_metrics(test_masks_recon,test_masks_orig_recon, error_recon):
+    # AUROC AOFlagger  
+    fpr,tpr, thr = roc_curve(test_masks_recon.flatten()>0, 
+                             error_recon.flatten())
+    ao_auroc = auc(fpr, tpr)
 
-    thr = get_threshold(fpr,tpr,thr,'MD',test_labels, error,anomaly_class)
+    # AUROC True 
+    fpr,tpr, thr = roc_curve(test_masks_orig_recon.flatten()>0, 
+                             error_recon.flatten())
+    true_auroc = auc(fpr, tpr)
 
-    # Accuracy of detecting anomalies and non-anomalies using this threshold
-    normal_accuracy = accuracy_score(test_labels == 'non_anomalous', error < thr)
-    anomalous_accuracy = accuracy_score(test_labels == anomaly_class, error > thr)
+    # IOU AOFlagger  
+    ao_iou = iou_score(error_recon, 
+                       test_masks_recon, 
+                       fpr, 
+                       tpr, 
+                       thr)
+    # IOU True
+    true_iou = iou_score(error_recon, 
+                         test_masks_orig_recon, 
+                         fpr, 
+                         tpr, 
+                         thr)
 
-    print('Anomalous Accuracy = {}'.format(anomalous_accuracy))
-    print('Normal Accuracy = {}'.format(normal_accuracy))
+    # AUPRC AOFlagger  
+    precision, recall, thresholds = precision_recall_curve(test_masks_recon.flatten()>0, 
+                                                           error_recon.flatten())
+    ao_auprc = auc(recall, precision)
 
-    return AUC, normal_accuracy, anomalous_accuracy
+    # AUPRC True 
+    precision, recall, thresholds = precision_recall_curve(test_masks_orig_recon.flatten()>0, 
+                                                           error_recon.flatten())
+    true_auprc = auc(recall, precision)
 
+
+    return ao_auroc, true_auroc, ao_auprc, true_auprc, ao_iou, true_iou
     
 def get_threshold(fpr,tpr,thr,flag,test_labels,error,anomaly_class):
     """
@@ -286,7 +362,7 @@ def get_dists(neighbours_dist, args):
     else:
         return dists 
 
-def iou_score(error, test_masks):
+def iou_score(error, test_masks,fpr,tpr,thr):
     """
         Get jaccard index or IOU score
 
@@ -300,12 +376,15 @@ def iou_score(error, test_masks):
         max_iou (float32): maximum iou score for a number of thresholds
 
     """
-    fpr,tpr, thr = roc_curve(test_masks.flatten()>0, np.mean(error,axis=-1).flatten())
 
-    iou = []
-    for threshold in np.linspace(np.min(thr), np.max(thr),10):
-        thresholded =np.mean(error,axis=-1) >=threshold
-        iou.append(jaccard_score(test_masks.flatten()>0, thresholded.flatten()))
+    idx = np.argmax(tpr-fpr) 
+    thresholded = np.mean(error,axis=-1) >=thr[idx]
+    iou = jaccard_score(test_masks.flatten()>0, thresholded.flatten())
+    return iou
+    #iou = []
+    #for threshold in np.linspace(np.min(thr), np.max(thr),10):
+    #    thresholded =np.mean(error,axis=-1) >=threshold
+    #    iou.append(jaccard_score(test_masks.flatten()>0, thresholded.flatten()))
 
-    return max(iou) 
+    #return max(iou) 
 

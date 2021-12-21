@@ -65,7 +65,7 @@ def nln(z, z_query, x_hat_train, algorithm, neighbours, radius=None):
         em = np.empty([1,x_hat_train.shape[1], x_hat_train.shape[2] ,x_hat_train.shape[-1]])
         em[:] = np.nan
 
-        x_hat_train = np.concatenate([x_hat_train, em])#if no neighbours make error large
+        np.concatenate([x_hat_train, em],out=x_hat_train)#if no neighbours make error large
         
     return neighbours_dist, neighbours_idx, x_hat_train, neighbour_mask
 
@@ -295,7 +295,7 @@ def get_nln_metrics(model,
                         error, test_labels_ = reconstruct_latent_patches(error, args, test_labels) 
                 else: test_labels_ = test_labels
 
-                error = np.mean(error,axis=tuple(range(1,error.ndim)))
+                error =np.mean(error,axis=tuple(range(1,error.ndim)))
 
                 temp_args = [error,test_labels_,args.anomaly_class,
                              args.neighbors, args.radius,n_bour,r, max_auc,

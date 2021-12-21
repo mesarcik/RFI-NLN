@@ -1,6 +1,7 @@
 import tensorflow as tf
 import numpy as np
 from .defaults import sizes
+from model_config import *
 
 def get_patched_dataset(train_images, 
                         train_labels, 
@@ -43,7 +44,6 @@ def get_patched_dataset(train_images,
                                               rate,
                                               padding)
     if test_masks is not None:
-        test_masks = np.expand_dims(test_masks,axis=-1)
         test_masks_patches, _ = get_patches(test_masks,
                                            test_labels,
                                            p_size,
@@ -51,7 +51,7 @@ def get_patched_dataset(train_images,
                                            rate,
                                            padding)
 
-        return train_patches,train_labels_p,test_patches,test_labels_p,test_masks_patches[...,0]
+        return train_patches,train_labels_p,test_patches,test_labels_p,test_masks_patches
 
     else: #test_masks is None 
         return train_patches,train_labels_p,test_patches,test_labels_p
@@ -73,20 +73,37 @@ def get_patches(x,
         s_size (list) stride size 
         rate (list) subsampling rate after getting patches 
     """
-    x_out = tf.image.extract_patches(images=x,
-                                     sizes=p_size,
-                                     strides=s_size,
-                                     rates=rate,
-                                     padding=padding)
+    scaling_factor =(x.shape[1]//p_size[1])**2
+    output = np.empty([x.shape[0]*scaling_factor,p_size[1], p_size[2], x.shape[-1]]) 
 
-    x_patches = np.reshape(x_out,(x_out.shape[0]*x_out.shape[1]*x_out.shape[2],
-                                  p_size[1],
-                                  p_size[2],
-                                  x.shape[-1]))
+    strt, fnnsh = 0, BATCH_SIZE
+    output_start, output_fnnsh = 0, BATCH_SIZE*scaling_factor
+    
+    for i in range(0,len(x),BATCH_SIZE):
+        x_out = tf.image.extract_patches(images=x[strt:fnnsh,...],
+                                         sizes=p_size,
+                                         strides=s_size,
+                                         rates=rate,
+                                         padding=padding).numpy()
 
-    y_labels = np.array([[label]*x_out.shape[1]*x_out.shape[2] for label in y]).flatten()
+        x_patches = np.reshape(x_out,(x_out.shape[0]*x_out.shape[1]*x_out.shape[2],
+                                      p_size[1],
+                                      p_size[2],
+                                      x.shape[-1]))
 
-    return x_patches,y_labels
+        output[output_start:output_fnnsh,...] = x_patches
+
+        strt=fnnsh
+        fnnsh+=BATCH_SIZE
+        output_start=output_fnnsh
+        output_fnnsh+=BATCH_SIZE*scaling_factor
+
+
+    if y is not None:
+        y_labels = np.array([[label]*x_out.shape[1]*x_out.shape[2] for label in y]).flatten()
+        return x_patches,y_labels
+    else:
+        return output 
 
 def reconstruct(patches,args, labels=None):
     """
@@ -130,10 +147,10 @@ def reconstruct(patches,args, labels=None):
 
             start = end
             end += n_patches**2 
-        return recon, np.array(labels_recon)
+        return recon.transpose(0,2,1,3), np.array(labels_recon)
 
     else:
-        return recon
+        return recon.transpose(0,2,1,3)
 
 def reconstruct_latent_patches(patches, args, labels=None):
     """

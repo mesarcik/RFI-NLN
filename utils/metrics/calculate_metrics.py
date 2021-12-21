@@ -67,21 +67,10 @@ def get_classifcation(model_type,
     return auc
 
 def save_metrics(model_type,
+                test_masks,
+                test_masks_orig,
                  args,
-                 auc_reconstruction, 
-                 seg_prc,
-                 neighbour,
-                 radius,
-                 auc_latent,
-                 seg_prc_nln,
-                 seg_auc=None,
-                 seg_auc_nln = None,
-                 seg_iou=None,
-                 seg_iou_nln = None,
-                 dists_auc=None,
-                 seg_dists_auc=None,
-                 sum_auc=None,
-                 mul_auc=None):
+                 **kwargs):
     
     """
         Either appends or saves a new .csv file with the top K 
@@ -90,21 +79,12 @@ def save_metrics(model_type,
         ----------
         model_type (str): type of model (vae,ae,..)
         args (Namespace):  arguments from utils.cmd_input
-        auc_reconstruction (np.float32): detection auroc for ae based reconstruction error 
-        seg_prc (np.float32): segmentation aucprc for ae based reconstruction error 
-        neighbour (int): #neighbours
-        radius (double): optional radius size if using frnn
-        auc_latent (np.float32): Detection auroc using latent distance
-        seg_prc_nln (np.float32): Segmentation auprc using nln 
         ... (optional arguments)
 
         Returns
         -------
         nothing
     """
-    
-    if isnan(radius): radius = 'nan'
-
     if not os.path.exists('outputs/results_{}_{}.csv'.format(args.data,
                                                              args.seed)):
         df = pd.DataFrame(columns = ['Model',
@@ -113,46 +93,80 @@ def save_metrics(model_type,
                                      'Patch_Size',
                                      'Class',
                                      'Type',
-                                     'Neighbour',
-                                     #'Radius',
-                                     'AUC_Reconstruction_Error',
-                                     'AUC_NLN_Error',
-                                     'Distance_AUC',
-                                     'Sum_Recon_NLN_Dist',
-                                     'Mul_Recon_NLN_Dist',
-                                     'Seg_PRC',
-                                     'Seg_PRC_NLN',
-                                     'Segmentation_Reconstruction',
-                                     'Segmentation_NLN',
-                                     'Segmentation_Distance_AUC',
-                                     'Segmentation_IOU',
-                                     'Segmentation_IOU_NLN'])
+                                     'Percentage Anomaly',
+                                     'RFI',
+
+                                     'AUROC_AO',
+                                     'AUROC_TRUE',
+                                     'AUPRC_AO',
+                                     'AUPRC_TRUE',
+                                     'IOU_AO',
+                                     'IOU_TRUE',
+
+                                     'NLN_AUROC_AO',
+                                     'NLN_AUROC_TRUE',
+                                     'NLN_AUPRC_AO',
+                                     'NLN_AUPRC_TRUE',
+                                     'NLN_IOU_AO',
+                                     'NLN_IOU_TRUE',
+
+
+                                     'DISTS_AUROC_AO',
+                                     'DISTS_AUROC_TRUE',
+                                     'DISTS_AUPRC_AO',
+                                     'DISTS_AUPRC_TRUE',
+                                     'DISTS_IOU_AO',
+                                     'DISTS_IOU_TRUE',
+
+                                     'COMBINED_AUROC_AO',
+                                     'COMBINED_AUROC_TRUE',
+                                     'COMBINED_AUPRC_AO',
+                                     'COMBINED_AUPRC_TRUE',
+                                     'COMBINED_IOU_AO',
+                                     'COMBINED_IOU_TRUE'])
     else:  
         df = pd.read_csv('outputs/results_{}_{}.csv'.format(args.data,
                                                             args.seed))
 
-
+    perc = round(((np.sum(test_masks) - np.sum(test_masks_orig))/np.prod(test_masks_orig.shape)),3)
     df = df.append({'Model':model_type,
                     'Name':args.model_name,
                     'Latent_Dim':cmd_input.args.latent_dim,
                     'Patch_Size':args.patch_x,
                     'Class':args.anomaly_class,
                     'Type':args.anomaly_type,
-                    'Neighbour':neighbour,
-                    #'Radius':radius,
-                    'AUC_Reconstruction_Error':auc_reconstruction,
-                    'AUC_NLN_Error':auc_latent,
-                    'Distance_AUC': dists_auc,
-                    'Sum_Recon_NLN_Dist':sum_auc,
-                    'Mul_Recon_NLN_Dist':mul_auc,
-                    'Seg_PRC':seg_prc,
-                    'Seg_PRC_NLN':seg_prc_nln,
-                    'Segmentation_Reconstruction':seg_auc,
-                    'Segmentation_NLN':seg_auc_nln,
-                    'Segmentation_Distance_AUC':seg_dists_auc,
-                    'Segmentation_IOU':seg_iou,
-                    'Segmentation_IOU_NLN':seg_iou_nln},
-                     ignore_index=True)
+                    'Percentage Anomaly':perc,
+                    'RFI':args.rfi,
+
+
+                     'AUROC_AO':   kwargs['ae_ao_auroc']  ,
+                     'AUROC_TRUE': kwargs['ae_true_auroc'] ,
+                     'AUPRC_AO':   kwargs['ae_ao_auprc']  ,
+                     'AUPRC_TRUE': kwargs['ae_true_auprc'] ,
+                     'IOU_AO':     kwargs['ae_ao_iou']    ,
+                     'IOU_TRUE':   kwargs['ae_true_iou']  ,
+
+                     'NLN_AUROC_AO':   kwargs['nln_ao_auroc']  ,
+                     'NLN_AUROC_TRUE': kwargs['nln_true_auroc'] ,
+                     'NLN_AUPRC_AO':   kwargs['nln_ao_auprc']  ,
+                     'NLN_AUPRC_TRUE': kwargs['nln_true_auprc'] ,
+                     'NLN_IOU_AO':     kwargs['nln_ao_iou']    ,
+                     'NLN_IOU_TRUE':   kwargs['nln_true_iou']  ,
+
+                     'DISTS_AUROC_AO':   kwargs['dists_ao_auroc']  ,
+                     'DISTS_AUROC_TRUE': kwargs['dists_true_auroc'] ,
+                     'DISTS_AUPRC_AO':   kwargs['dists_ao_auprc']  ,
+                     'DISTS_AUPRC_TRUE': kwargs['dists_true_auprc'] ,
+                     'DISTS_IOU_AO':     kwargs['dists_ao_iou']    ,
+                     'DISTS_IOU_TRUE':   kwargs['dists_true_iou']  ,
+
+                     'COMBINED_AUROC_AO':   kwargs['combined_ao_auroc']  ,
+                     'COMBINED_AUROC_TRUE': kwargs['combined_true_auroc'] ,
+                     'COMBINED_AUPRC_AO':   kwargs['combined_ao_auprc']  ,
+                     'COMBINED_AUPRC_TRUE': kwargs['combined_true_auprc'] ,
+                     'COMBINED_IOU_AO':     kwargs['combined_ao_iou']    ,
+                     'COMBINED_IOU_TRUE':   kwargs['combined_true_iou']
+                      }, ignore_index=True)
 
     df.to_csv('outputs/results_{}_{}.csv'.format(args.data,
                                                  args.seed),index=False)

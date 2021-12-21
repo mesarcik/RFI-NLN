@@ -1,6 +1,8 @@
 # RFI mitigation using novelty detection in autoencoders
 A repository containing the implementation of the paper entitled "//////"
 
+**NOTE mention AOFLAGGER**
+
 ## Installation 
 Install conda environment by:
 ``` 

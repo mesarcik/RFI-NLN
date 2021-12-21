@@ -21,11 +21,13 @@ def infer(model, data, args, arch):
     """
     data_tensor = tf.data.Dataset.from_tensor_slices(data).batch(BATCH_SIZE)
 
-    if arch =='AE' or arch == 'encoder':
+    if arch =='AE' or arch == 'encoder' or arch == 'DKNN':
         if arch=='encoder':
-            output = np.empty([len(data), args.latent_dim])
+            output = np.empty([len(data), args.latent_dim],np.float16)
+        elif arch=='DKNN':
+            output = np.empty([len(data), 2048], np.float16)
         else:
-            output = np.empty(data.shape)
+            output = np.empty(data.shape,dtype=np.float16)
         strt, fnnsh = 0, BATCH_SIZE
         for batch in data_tensor:
             output[strt:fnnsh,...] = model(batch).numpy() 
@@ -33,7 +35,7 @@ def infer(model, data, args, arch):
             fnnsh +=BATCH_SIZE
     
     else:
-        output = np.empty([len(data), args.latent_dim])
+        output = np.empty([len(data), args.latent_dim], dtype=np.float16)
         strt, fnnsh = 0, BATCH_SIZE
         for batch in data_tensor:
             output[strt:fnnsh,...] = model(batch)[0].numpy() # for disc
@@ -72,7 +74,7 @@ def get_error(model_type,
         np.array
 
     """
-
+    
     if ((model_type == 'AE') or 
             (model_type == 'AAE') or
             (model_type == 'AE_SSIM') or
@@ -88,10 +90,13 @@ def get_error(model_type,
     elif model_type == 'GANomaly':
         error = z- z_hat
 
+    elif model_type == 'UNET':
+        error = x_hat
+
     if ab:
-        error = np.abs(error,dtype=np.float32)
+        np.abs(error,dtype=np.float32, out=error)
 
     if mean:
-        error =  error.mean(axis=tuple(range(1,error.ndim)))
+        error = np.mean(error,axis=tuple(range(1,error.ndim)))
     
     return error 

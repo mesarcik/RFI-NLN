@@ -18,7 +18,7 @@ discriminator_optimizer = tf.keras.optimizers.Adam(1e-5)
 generator_optimizer = tf.keras.optimizers.Adam(1e-5)
 
 def ae_loss(x,x_hat):
-    return mse(x,x_hat)
+    return bce(x,x_hat)
 
 def discriminator_loss(real_output, fake_output,loss_weight):
     real_loss =  bce(tf.ones_like(real_output), real_output)
@@ -102,7 +102,7 @@ def train(ae,discriminator, train_dataset,test_images,test_labels,args):
 
     return ae,discriminator
 
-def main(train_dataset,train_images, train_labels, test_images, test_labels, test_masks, args):
+def main(train_dataset,train_images, train_labels, test_images, test_labels, test_masks, test_masks_orig,args):
 
     if args.data == 'MVTEC':
         ae = Autoencoder_MVTEC(args)
@@ -116,7 +116,7 @@ def main(train_dataset,train_images, train_labels, test_images, test_labels, tes
                               test_images,
                               test_labels,
                               args)
-    end_routine(train_images, test_images, test_labels, test_masks, [ae, discriminator], 'DAE_disc', args)
+    end_routine(train_images, test_images, test_labels, test_masks, test_masks_orig, [ae, discriminator], 'DAE_disc', args)
     
 if __name__  == '__main__':
     main()
