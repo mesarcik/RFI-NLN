@@ -21,34 +21,16 @@ def main():
         # Virtual devices must be set before GPUs have been initialized
         print(e)
 
-
     if cmd_input.args.data == 'HERA':
-        (unet_train_dataset,
-            train_data, 
-            train_labels, 
-            train_masks, 
-            ae_train_dataset,
-            ae_train_data, 
-            ae_train_labels, 
-            test_data, 
-            test_labels, 
-            test_masks,
-            test_masks_orig) = load_hera(cmd_input.args)
-
-
+        data  = load_hera(cmd_input.args)
     elif cmd_input.args.data == 'LOFAR':
-        (unet_train_dataset,
-            train_data, 
-            train_labels, 
-            train_masks, 
-            ae_train_dataset,
-            ae_train_data, 
-            ae_train_labels, 
-            test_data, 
-            test_labels, 
-            test_masks,
-            test_masks_orig) = load_lofar(cmd_input.args)
+        data = load_lofar(cmd_input.args)
+    elif cmd_input.args.data == 'HIDE':
+        data = load_hide(cmd_input.args)
 
+    (unet_train_dataset, train_data, train_labels, train_masks, 
+     ae_train_dataset, ae_train_data, ae_train_labels,
+     test_data, test_labels, test_masks,test_masks_orig) = data
 
     print(" __________________________________ \n Latent dimensionality {}".format(
                                                cmd_input.args.latent_dim))
