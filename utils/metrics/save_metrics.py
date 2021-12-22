@@ -5,7 +5,7 @@ import pandas as pd
 from sklearn.metrics import roc_curve, auc, average_precision_score, roc_auc_score
 from math import isnan
 from inference import infer, get_error
-from utils import cmd_input 
+from utils import args 
 from utils.data import reconstruct
 
 def save_metrics(model_type,
@@ -21,7 +21,7 @@ def save_metrics(model_type,
         Parameters
         ----------
         model_type (str): type of model (vae,ae,..)
-        args (Namespace):  arguments from utils.cmd_input
+        args (Namespace):  arguments from utils.args
         ... (optional arguments)
 
         Returns
@@ -75,7 +75,7 @@ def save_metrics(model_type,
     perc = round(((np.sum(test_masks) - np.sum(test_masks_orig))/np.prod(test_masks_orig.shape)),3)
     df = df.append({'Model':model_type,
                     'Name':args.model_name,
-                    'Latent_Dim':cmd_input.args.latent_dim,
+                    'Latent_Dim':args.latent_dim,
                     'Patch_Size':args.patch_x,
                     'Class':args.anomaly_class,
                     'Type':args.anomaly_type,

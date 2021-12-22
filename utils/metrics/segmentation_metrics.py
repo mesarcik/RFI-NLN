@@ -8,7 +8,6 @@ from sklearn.metrics import (roc_curve,
                              roc_auc_score, 
                              precision_recall_curve)
 from inference import infer, get_error
-from utils import cmd_input 
 from utils.data import *
 from utils.metrics import nln, get_nln_errors
 from reporting import plot_neighs
