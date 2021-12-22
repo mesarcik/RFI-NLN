@@ -14,7 +14,7 @@ def main():
       try:
         tf.config.set_logical_device_configuration(
             gpus[0],
-            [tf.config.LogicalDeviceConfiguration(memory_limit=2**14)])
+            [tf.config.LogicalDeviceConfiguration(memory_limit=2**15)])
         logical_gpus = tf.config.list_logical_devices('GPU')
         print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
       except RuntimeError as e:
@@ -32,8 +32,6 @@ def main():
      ae_train_dataset, ae_train_data, ae_train_labels,
      test_data, test_labels, test_masks,test_masks_orig) = data
 
-    print(" __________________________________ \n Latent dimensionality {}".format(
-                                               cmd_input.args.latent_dim))
     print(" __________________________________ \n Save name {}".format(
                                                cmd_input.args.model_name))
     print(" __________________________________ \n")

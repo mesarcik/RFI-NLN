@@ -34,15 +34,15 @@ def get_hide_data(directory, args, sigma=5):
         num_baselines (int): number of baselines to sample 
     """
 
-#    if os.path.exists(os.path.join(directory,'joined_dataset.pickle')):
-#        print(os.path.join(directory,'{}/joined_dataset.pickle') + ' Loading')
-#        with open('{}/joined_dataset.pickle'.format(directory),'rb') as f:
-#            return pickle.load(f)
-#
-#    else:
-#        print('Creating joined HIDE dataset')
-#
-    files = glob('{}/*.h5'.format(directory))
+    if os.path.exists(os.path.join(directory,'joined_dataset.pickle')):
+        print(os.path.join(directory,'joined_dataset.pickle') + ' Loading')
+        with open('{}/joined_dataset.pickle'.format(directory),'rb') as f:
+            return pickle.load(f)
+
+    else:
+        print('Creating joined HIDE dataset')
+
+    files = glob('{}/*/*.h5'.format(directory))
     data = np.empty([len(files)//2, 
                      sizes[args.data], 
                      sizes[args.data], 1], 
@@ -60,7 +60,7 @@ def get_hide_data(directory, args, sigma=5):
         temp_rfi = np.expand_dims(temp_rfi, axis=[0,-1])
         snr = (np.mean(temp_data)/np.mean(temp_rfi))
 
-        temp_masks = temp_rfi>(0.1*np.std(temp_data))
+        temp_masks = temp_rfi>(0.2*np.std(temp_data))
         
         temp_data, temp_masks = _random_crop(temp_data.astype('float32'),
                                              temp_masks.astype('int'),

@@ -68,12 +68,6 @@ if args.data == 'MNIST' or args.data == 'FASHION_MNIST':
 elif args.data == 'CIFAR10':
     args.input_shape =(32,32,3)
 
-elif args.data == 'HERA':
-    args.input_shape =(64, 256,1)
-
-elif args.data == 'LOFAR':
-    args.input_shape =(128,64,1)
-
 elif args.data == 'MVTEC':
     if (('grid' in args.anomaly_class) or
         ('screw' in args.anomaly_class) or 
@@ -81,6 +75,16 @@ elif args.data == 'MVTEC':
         args.input_shape =(1024,1024,1)
     else:
         args.input_shape =(1024,1024,3)
+
+elif args.data == 'HERA':
+    args.input_shape =(64, 256,1)
+
+elif args.data == 'HIDE':
+    args.input_shape =(256, 256,1)
+
+elif args.data == 'LOFAR':
+    args.input_shape =(128,64,1)
+
 
 if args.patches:
     args.input_shape = (args.patch_x,args.patch_y,args.input_shape[-1])

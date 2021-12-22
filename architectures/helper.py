@@ -1,8 +1,8 @@
 from utils.plotting import save_training_curves
-from utils.metrics import get_classifcation, get_nln_metrics, save_metrics, accuracy_metrics
+from utils.metrics import get_nln_metrics, save_metrics, evaluate_performance
 
-def end_routine(train_images, 
-                test_images, 
+def end_routine(train_data, 
+                test_data, 
                 test_labels, 
                 test_masks, 
                 test_masks_orig, 
@@ -10,9 +10,6 @@ def end_routine(train_images,
                 model_type, 
                 args):
 
-#    return None 
-#    if model_type != 'DKNN':
-#        save_training_curves(model,args,test_images,test_labels,model_type)
     (ae_ao_auroc,  ae_true_auroc, 
      ae_ao_auprc,  ae_true_auprc,      
      ae_ao_iou,    ae_true_iou,
@@ -24,18 +21,19 @@ def end_routine(train_images,
      dists_ao_iou,   dists_true_iou,
      combined_ao_auroc, combined_true_auroc, 
      combined_ao_auprc, combined_true_auprc,      
-     combined_ao_iou,   combined_true_iou) = accuracy_metrics(model,
-                                                              train_images,
-                                                              test_images,
-                                                              test_labels,
-                                                              test_masks,
-                                                              test_masks_orig,
-                                                              model_type,
-                                                              args)
+     combined_ao_iou,   combined_true_iou) = evaluate_performance(model,
+                                                                  train_data,
+                                                                  test_data,
+                                                                  test_labels,
+                                                                  test_masks,
+                                                                  test_masks_orig,
+                                                                  model_type,
+                                                                  args)
 
     
 
     save_metrics(model_type,
+                 train_data,
                  test_masks,
                  test_masks_orig,
                  args,

@@ -19,7 +19,7 @@ def load_hide(args):
     """
 
     (train_data, train_masks, 
-            test_data, test_masks) = get_hide_data('/data/mmesarcik/HIDE/2016/03/21/', args)
+            test_data, test_masks) = get_hide_data('/data/mmesarcik/HIDE/2016/03', args)
 
 
     test_data[test_data==0] = 0.001 # to make log normalisation happy

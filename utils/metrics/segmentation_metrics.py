@@ -16,14 +16,14 @@ from matplotlib import pyplot as plt
 
 import time
 
-def accuracy_metrics(model,
-                     train_images,
-                     test_images,
-                     test_labels,
-                     test_masks,
-                     test_masks_orig,
-                     model_type,
-                     args):
+def evaluate_performance(model,
+                         train_images,
+                         test_images,
+                         test_labels,
+                         test_masks,
+                         test_masks_orig,
+                         model_type,
+                         args):
 
     """
         Calculate accuracy metrics for MVTEC AD as reported by the paper
