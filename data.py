@@ -6,7 +6,7 @@ from tqdm import tqdm
 #from hera_sim import rfi 
 from model_config import BUFFER_SIZE,BATCH_SIZE
 from sklearn.model_selection import train_test_split
-from utils.flagging import flag_hera
+from utils.flagging import flag_data
 from utils.data import (get_lofar_data, 
                         get_hera_data,
                         get_hide_data,
@@ -19,16 +19,16 @@ def load_hide(args):
     """
 
     (train_data, train_masks, 
-            test_data, test_masks) = get_hide_data('/data/mmesarcik/HIDE/2016/03', args)
+            test_data, test_masks) = get_hide_data(args)
 
 
-    test_data[test_data==0] = 0.001 # to make log normalisation happy
-    test_data = np.nan_to_num(np.log(test_data),nan=0)
-    test_data = process(test_data, per_image=False)
+    #test_data[test_data==0] = 0.001 # to make log normalisation happy
+    #test_data = np.nan_to_num(np.log(test_data),nan=0)
+    #test_data = process(test_data, per_image=False)
 
-    train_data[train_data==0] = 0.001 # to make log normalisation happy
-    train_data = np.nan_to_num(np.log(train_data),nan=0)
-    train_data = process(train_data, per_image=False)
+    #train_data[train_data==0] = 0.001 # to make log normalisation happy
+    #train_data = np.nan_to_num(np.log(train_data),nan=0)
+    #train_data = process(train_data, per_image=False)
 
     if args.limit is not None:
         train_indx = np.random.permutation(len(train_data))[:args.limit]
@@ -38,6 +38,13 @@ def load_hide(args):
         train_masks = train_masks[train_indx]
         #test_data   = test_data  [test_indx]
         #test_masks  = test_masks [test_indx]
+
+    test_masks_orig = copy.deepcopy(test_masks)
+    if args.rfi_threshold is not None:
+        test_masks = flag_data(test_data,args)
+        train_masks = flag_data(train_data,args)
+        test_masks = np.expand_dims(test_masks,axis=-1) 
+        train_masks = np.expand_dims(train_masks,axis=-1) 
 
     if args.patches:
         p_size = (1,args.patch_x, args.patch_y, 1)
@@ -60,10 +67,6 @@ def load_hide(args):
         ae_train_data  = train_data[np.invert(np.any(train_masks, axis=(1,2,3)))]
         ae_train_labels = train_labels[np.invert(np.any(train_masks, axis=(1,2,3)))]
 
-        #test_data  =  test_data[np.invert(np.any(test_masks, axis=(1,2,3)))]
-        #test_labels = test_labels[np.invert(np.any(test_masks, axis=(1,2,3)))]
-        #test_masks = test_masks[np.invert(np.any(test_masks, axis=(1,2,3)))]
-
     ae_train_data = ae_train_data.astype(np.float16) 
     train_data = train_data.astype(np.float16) 
     test_data = test_data.astype(np.float16) 
@@ -82,7 +85,7 @@ def load_hide(args):
             test_data, 
             test_labels, 
             test_masks,
-            test_masks)
+            test_masks_orig)
 
 
 def load_hera(args):
@@ -106,8 +109,8 @@ def load_hera(args):
 
     test_masks_orig = copy.deepcopy(test_masks)
     if args.rfi_threshold is not None:
-        test_masks = flag_hera(test_data,args)
-        train_masks = flag_hera(train_data,args)
+        test_masks = flag_data(test_data,args)
+        train_masks = flag_data(train_data,args)
         test_masks = np.expand_dims(test_masks,axis=-1) 
         train_masks = np.expand_dims(train_masks,axis=-1) 
 

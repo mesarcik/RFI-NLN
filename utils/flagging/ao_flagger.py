@@ -2,7 +2,7 @@ import aoflagger as aof
 import numpy as np 
 from tqdm import tqdm
 
-def flag_hera(data, args):
+def flag_data(data, args):
     """
         Applies AOFlagger to simulated HERA visibilities
 
@@ -19,8 +19,10 @@ def flag_hera(data, args):
     mask = np.empty(data[...,0].shape, dtype=np.bool)
 
     aoflagger = aof.AOFlagger()
-    strategy = aoflagger.load_strategy_file('utils/flagging/stratergies/bighorns-{}.lua'.format(int(args.rfi_threshold)))
-
+    if args.data == 'HERA':
+        strategy = aoflagger.load_strategy_file('utils/flagging/stratergies/bighorns-{}.lua'.format(int(args.rfi_threshold)))
+    elif args.data == 'HIDE':
+        strategy = aoflagger.load_strategy_file('utils/flagging/stratergies/wsrt-default-{}.lua'.format(int(args.rfi_threshold)))
 
     # LOAD data into AOFlagger structure
     for indx in tqdm(range(len(data))):
