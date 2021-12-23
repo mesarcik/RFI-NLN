@@ -60,7 +60,7 @@ def get_hide_data(args, sigma=5):
         temp_rfi = np.expand_dims(temp_rfi, axis=[0,-1])
         snr = (np.mean(temp_data)/np.mean(temp_rfi))
 
-        temp_masks = temp_rfi>(0.2*np.std(temp_data))
+        temp_masks = temp_rfi>(0.1*np.std(temp_data))
         
         temp_data, temp_masks = _random_crop(temp_data.astype('float32'),
                                              temp_masks.astype('int'),

@@ -22,13 +22,13 @@ def load_hide(args):
             test_data, test_masks) = get_hide_data(args)
 
 
-    #test_data[test_data==0] = 0.001 # to make log normalisation happy
-    #test_data = np.nan_to_num(np.log(test_data),nan=0)
-    #test_data = process(test_data, per_image=False)
+    test_data[test_data==0] = 0.001 # to make log normalisation happy
+    test_data = np.nan_to_num(np.log(test_data),nan=0)
+    test_data = process(test_data, per_image=False)
 
-    #train_data[train_data==0] = 0.001 # to make log normalisation happy
-    #train_data = np.nan_to_num(np.log(train_data),nan=0)
-    #train_data = process(train_data, per_image=False)
+    train_data[train_data==0] = 0.001 # to make log normalisation happy
+    train_data = np.nan_to_num(np.log(train_data),nan=0)
+    train_data = process(train_data, per_image=False)
 
     if args.limit is not None:
         train_indx = np.random.permutation(len(train_data))[:args.limit]
@@ -55,6 +55,7 @@ def load_hide(args):
         test_data = get_patches(test_data, None, p_size,s_size,rate,'VALID')
         train_masks = get_patches(train_masks, None, p_size,s_size,rate,'VALID').astype(np.bool)
         test_masks= get_patches(test_masks.astype('int') , None, p_size,s_size,rate,'VALID').astype(np.bool)
+        test_masks_orig = get_patches(test_masks_orig.astype('int') , None, p_size,s_size,rate,'VALID').astype(np.bool)
 
         train_labels = np.empty(len(train_data), dtype='object')
         train_labels[np.any(train_masks, axis=(1,2,3))] = args.anomaly_class

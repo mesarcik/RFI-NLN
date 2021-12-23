@@ -5,7 +5,6 @@ import pandas as pd
 from sklearn.metrics import roc_curve, auc, average_precision_score, roc_auc_score
 from math import isnan
 from inference import infer, get_error
-from utils import args 
 from utils.data import reconstruct
 
 def save_metrics(model_type,
@@ -38,7 +37,7 @@ def save_metrics(model_type,
                                      'Type',
                                      'Percentage Anomaly',
                                      'N_Training_Samples',
-                                     'RFI',
+                                     'RFI_Threshold',
 
                                      'AUROC_AO',
                                      'AUROC_TRUE',
@@ -81,7 +80,7 @@ def save_metrics(model_type,
                     'Type':args.anomaly_type,
                     'Percentage Anomaly':perc,
                     'N_Training_Samples':len(train_data),
-                    'RFI':args.rfi,
+                    'RFI_Threshold':args.rfi_threshold,
 
 
                      'AUROC_AO':   kwargs['ae_ao_auroc']  ,

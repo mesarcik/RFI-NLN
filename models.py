@@ -235,7 +235,7 @@ def UNET(args, n_filters = 16, dropout = 0.05, batchnorm = True):
                       n_filters * 1, 
                       kernel_size = 3, 
                       batchnorm = batchnorm,
-                      stride=(1,1))
+                      stride=(2,2))
     #p1 = layers.MaxPooling2D((2, 2))(c1)
     p1 = layers.Dropout(dropout)(c1)
     
@@ -284,7 +284,7 @@ def UNET(args, n_filters = 16, dropout = 0.05, batchnorm = True):
     u9 = layers.Conv2DTranspose(n_filters * 1, (3, 3), strides = (2, 2), padding = 'same')(c8)
     u9 = layers.concatenate([u9, c1])
     u9 = layers.Dropout(dropout)(u9)
-#    u9 = layers.UpSampling2D((2,2))(u9)
+    u9 = layers.UpSampling2D((2,2))(u9)
     c9 = conv2d_block(u9, n_filters * 1, kernel_size = 3, batchnorm = batchnorm)
     
     outputs = layers.Conv2D(1, (1, 1), activation='sigmoid')(c9)
