@@ -22,6 +22,7 @@ def evaluate_performance(model,
                          test_masks,
                          test_masks_orig,
                          model_type,
+                         neighbour,
                          args):
 
     """
@@ -150,82 +151,68 @@ def evaluate_performance(model,
 
 
 
-    nln_true_aurocs, dists_true_aurocs, combined_true_aurocs = [], [], []
-    nln_ao_aurocs, dists_ao_aurocs, combined_ao_aurocs = [], [], []
-    for n in args.neighbors:
-        print('Neighbours = {}'.format(n))
-        neighbours_dist, neighbours_idx, x_hat_train, neighbour_mask =  nln(z, 
-                                                                            z_query, 
-                                                                            x_hat_train, 
-                                                                            args.algorithm, 
-                                                                            n,
-                                                                            -1)
-        nln_error = get_nln_errors(model,
-                                   'AE',
-                                   z_query,
-                                   z,
-                                   test_images,
-                                   x_hat_train,
-                                   neighbours_idx,
-                                   neighbour_mask,
-                                   args)
+    neighbours_dist, neighbours_idx, x_hat_train, neighbour_mask =  nln(z, 
+                                                                        z_query, 
+                                                                        x_hat_train, 
+                                                                        args.algorithm, 
+                                                                        neighbour,
+                                                                        -1)
+    nln_error = get_nln_errors(model,
+                               'AE',
+                               z_query,
+                               z,
+                               test_images,
+                               x_hat_train,
+                               neighbours_idx,
+                               neighbour_mask,
+                               args)
 
 
-        if args.patches:
-            if nln_error.ndim ==4:
-                nln_error_recon = patches.reconstruct(nln_error, args)
-            else:
-                nln_error_recon = patches.reconstruct_latent_patches(nln_error, args)
-        else: nln_error_recon = nln_error
-        
+    if args.patches:
+        if nln_error.ndim ==4:
+            nln_error_recon = patches.reconstruct(nln_error, args)
+        else:
+            nln_error_recon = patches.reconstruct_latent_patches(nln_error, args)
+    else: nln_error_recon = nln_error
+    
 
-        dists_recon = get_dists(neighbours_dist, args)
-        alpha=0.3
-        combined_recon = alpha*normalise(nln_error_recon) + (1-alpha)*normalise(dists_recon)
+    dists_recon = get_dists(neighbours_dist, args)
 
-        (nln_ao_auroc, nln_true_auroc, 
-         nln_ao_auprc, nln_true_auprc,      
-         nln_ao_iou,   nln_true_iou) = get_metrics(test_masks_recon, 
+
+    (nln_ao_auroc, nln_true_auroc, 
+     nln_ao_auprc, nln_true_auprc,      
+     nln_ao_iou,   nln_true_iou) = get_metrics(test_masks_recon, 
+                                               test_masks_orig_recon, 
+                                               nln_error_recon)
+
+
+    (dists_ao_auroc, dists_true_auroc, 
+     dists_ao_auprc, dists_true_auprc,      
+     dists_ao_iou,   dists_true_iou) = get_metrics(test_masks_recon, 
                                                    test_masks_orig_recon, 
-                                                   nln_error_recon)
+                                                   dists_recon)
 
-
-        (dists_ao_auroc, dists_true_auroc, 
-         dists_ao_auprc, dists_true_auprc,      
-         dists_ao_iou,   dists_true_iou) = get_metrics(test_masks_recon, 
-                                                       test_masks_orig_recon, 
-                                                       dists_recon)
-
-        (combined_ao_auroc, combined_true_auroc, 
-         combined_ao_auprc, combined_true_auprc,      
-         combined_ao_iou,   combined_true_iou) = get_metrics(test_masks_recon, 
+    combined_true_aurocs,combined_true_auprcs, combined_true_ious  = [], [],[]
+    for alpha in args.alphas:
+    combined_recon = alpha*normalise(nln_error_recon) + (1-alpha)*normalise(dists_recon)
+        (_, combined_true_auroc, 
+         _, combined_true_auprc,      
+         _,   combined_true_iou) = get_metrics(test_masks_recon, 
                                                        test_masks_orig_recon, 
                                                        combined_recon)
-        nln_ao_aurocs.append(nln_ao_auroc)
-        nln_true_aurocs.append(nln_true_auroc)
-        dists_ao_aurocs.append(dists_ao_auroc)
-        dists_true_aurocs.append(dists_true_auroc)
-        combined_ao_aurocs.append(combined_ao_auroc)
         combined_true_aurocs.append(combined_true_auroc)
-
-    dists_ao_auroc = np.max(dists_ao_aurocs)    
-    dists_true_auroc = np.max(dists_true_aurocs)    
-    n_dist = args.neighbors[np.argmax(dists_ao_aurocs)]
-
-    nln_ao_auroc = np.max(nln_ao_aurocs)    
-    nln_true_auroc = np.max(nln_true_aurocs)    
-    n_nln = args.neighbors[np.argmax(nln_ao_aurocs)]
-
-    combined_ao_auroc = np.max(combined_ao_aurocs)    
-    combined_true_auroc = np.max(combined_true_aurocs)    
-    n_combined= args.neighbors[np.argmax(combined_ao_aurocs)]
+        combined_true_auprcs.append(combined_true_auprc)
+        combined_true_ious.append(combined_true_iou)
+        combined_ao_aurocs.append(-1)
+        combined_ao_auprcs.append(-1)
+        combined_ao_ious.append(-1)
 
     fig, axs = plt.subplots(10,6, figsize=(10,7))
     axs[0,0].set_title('Inp',fontsize=5)
     axs[0,1].set_title('Mask',fontsize=5)
     axs[0,2].set_title('Recon {}'.format(ae_ao_auroc),fontsize=5)
-    axs[0,3].set_title('NLN {} {}'.format(nln_ao_auroc, n_nln),fontsize=5)
-    axs[0,4].set_title('Dist {} {}'.format(dists_ao_auroc, n_dist),fontsize=5)
+    axs[0,3].set_title('NLN {} {}'.format(nln_ao_auroc, neighbour),fontsize=5)
+    axs[0,4].set_title('Dist {} {}'.format(dists_ao_auroc, neighbour),fontsize=5)
     axs[0,5].set_title('Combined {} {}'.format(combined_ao_auroc, n_combined),fontsize=5)
 
     for i in range(10):
@@ -236,9 +223,10 @@ def evaluate_performance(model,
         axs[i,3].imshow(nln_error_recon[r,...,0].astype(np.float32))
         axs[i,4].imshow(dists_recon[r,...,0].astype(np.float32))
         axs[i,5].imshow(combined_recon[r,...,0].astype(np.float32))
-    plt.savefig('outputs/{}/{}/{}/neighbours.png'.format(model_type,
+    plt.savefig('outputs/{}/{}/{}/neighbours_{}.png'.format(model_type,
                                                    args.anomaly_class,
-                                                   args.model_name), dpi=300)
+                                                   args.model_name,
+                                                   neighbour), dpi=300)
 
 
     return (ae_ao_auroc,  ae_true_auroc, 
@@ -250,15 +238,15 @@ def evaluate_performance(model,
             dists_ao_auroc, dists_true_auroc, 
             dists_ao_auprc, dists_true_auprc,      
             dists_ao_iou,   dists_true_iou,
-            combined_ao_auroc, combined_true_auroc, 
-            combined_ao_auprc, combined_true_auprc,      
-            combined_ao_iou,   combined_true_iou)
+            combined_ao_aurocs, combined_true_aurocs, 
+            combined_ao_auprcs, combined_true_auprcs,      
+            combined_ao_ious,   combined_true_ious)
 
 def get_metrics(test_masks_recon,test_masks_orig_recon, error_recon):
-    # AUROC AOFlagger  
-    fpr,tpr, thr = roc_curve(test_masks_recon.flatten()>0, 
-                             error_recon.flatten())
-    ao_auroc = auc(fpr, tpr)
+    ## AUROC AOFlagger  
+    #fpr,tpr, thr = roc_curve(test_masks_recon.flatten()>0, 
+    #                         error_recon.flatten())
+    #ao_auroc = auc(fpr, tpr)
 
     # AUROC True 
     fpr,tpr, thr = roc_curve(test_masks_orig_recon.flatten()>0, 
@@ -266,11 +254,11 @@ def get_metrics(test_masks_recon,test_masks_orig_recon, error_recon):
     true_auroc = auc(fpr, tpr)
 
     # IOU AOFlagger  
-    ao_iou = iou_score(error_recon, 
-                       test_masks_recon, 
-                       fpr, 
-                       tpr, 
-                       thr)
+    #ao_iou = iou_score(error_recon, 
+    #                   test_masks_recon, 
+    #                   fpr, 
+    #                   tpr, 
+    #                   thr)
     # IOU True
     true_iou = iou_score(error_recon, 
                          test_masks_orig_recon, 
@@ -279,9 +267,9 @@ def get_metrics(test_masks_recon,test_masks_orig_recon, error_recon):
                          thr)
 
     # AUPRC AOFlagger  
-    precision, recall, thresholds = precision_recall_curve(test_masks_recon.flatten()>0, 
-                                                           error_recon.flatten())
-    ao_auprc = auc(recall, precision)
+    #precision, recall, thresholds = precision_recall_curve(test_masks_recon.flatten()>0, 
+    #                                                       error_recon.flatten())
+    #ao_auprc = auc(recall, precision)
 
     # AUPRC True 
     precision, recall, thresholds = precision_recall_curve(test_masks_orig_recon.flatten()>0, 
@@ -289,7 +277,7 @@ def get_metrics(test_masks_recon,test_masks_orig_recon, error_recon):
     true_auprc = auc(recall, precision)
 
 
-    return ao_auroc, true_auroc, ao_auprc, true_auprc, ao_iou, true_iou
+    return -1, true_auroc, -1, true_auprc, -1, true_iou
     
 def get_threshold(fpr,tpr,thr,flag,test_labels,error,anomaly_class):
     """
