@@ -35,7 +35,7 @@ def get_lofar_data(directory, args, num_baselines=800):
     # if the training dataset has already been created then return that
 
     if os.path.exists(os.path.join(directory,'joined_dataset.pickle')):
-        print(os.path.join(directory,'{}.joined_dataset.pickle') + ' Loading')
+        print(os.path.join(directory,'joined_dataset.pickle') + ' Loading')
         with open('{}/joined_dataset.pickle'.format(directory),'rb') as f:
             return pickle.load(f)
 

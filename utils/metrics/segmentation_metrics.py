@@ -87,9 +87,9 @@ def evaluate_performance(model,
          -1, -1, 
          -1, -1,      
          -1, -1,
-         -1, -1, 
-         -1, -1,      
-         -1, -1)
+         [-1], [-1], 
+         [-1], [-1],      
+         [-1], [-1])
 
     elif model_type =='DKNN':
         z_train = infer(model[0], train_images, args, 'DKNN')
@@ -129,9 +129,9 @@ def evaluate_performance(model,
                 -1, -1, 
                 -1, -1,      
                 -1, -1,
-                -1, -1, 
-                -1, -1,      
-                -1, -1)
+                [-1], [-1], 
+                [-1], [-1],      
+                [-1], [-1])
 
     z = infer(model[0].encoder, train_images, args, 'encoder')
     z_query = infer(model[0].encoder, test_images, args, 'encoder')
@@ -192,9 +192,10 @@ def evaluate_performance(model,
                                                    test_masks_orig_recon, 
                                                    dists_recon)
 
-    combined_true_aurocs,combined_true_auprcs, combined_true_ious  = [], [],[]
+    combined_true_aurocs, combined_true_auprcs, combined_true_ious  = [], [],[]
+    combined_ao_aurocs, combined_ao_auprcs, combined_ao_ious  = [], [],[]
     for alpha in args.alphas:
-    combined_recon = alpha*normalise(nln_error_recon) + (1-alpha)*normalise(dists_recon)
+        combined_recon = alpha*normalise(nln_error_recon) + (1-alpha)*normalise(dists_recon)
         (_, combined_true_auroc, 
          _, combined_true_auprc,      
          _,   combined_true_iou) = get_metrics(test_masks_recon, 
@@ -213,7 +214,7 @@ def evaluate_performance(model,
     axs[0,2].set_title('Recon {}'.format(ae_ao_auroc),fontsize=5)
     axs[0,3].set_title('NLN {} {}'.format(nln_ao_auroc, neighbour),fontsize=5)
     axs[0,4].set_title('Dist {} {}'.format(dists_ao_auroc, neighbour),fontsize=5)
-    axs[0,5].set_title('Combined {} {}'.format(combined_ao_auroc, n_combined),fontsize=5)
+    axs[0,5].set_title('Combined {} {}'.format(combined_ao_aurocs[0], neighbour),fontsize=5)
 
     for i in range(10):
         r = np.random.randint(len(test_data_recon))

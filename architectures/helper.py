@@ -32,8 +32,7 @@ def end_routine(train_data,
                                                                       neighbour,
                                                                       args)
 
-        for i,alpha in enumerate(alphas): 
-
+        for i,alpha in enumerate(args.alphas): 
             save_metrics(model_type,
                          train_data,
                          test_masks,
@@ -69,7 +68,8 @@ def end_routine(train_data,
                          combined_true_auprc= combined_true_auprcs[i],
                          combined_ao_iou=     combined_ao_ious[i],
                          combined_true_iou=   combined_true_ious[i])
-                if model_type == 'UNET' or model_type == 'DKNN':
-                    return 
+
+            if model_type == 'UNET' or model_type == 'DKNN':
+                return 
 
 

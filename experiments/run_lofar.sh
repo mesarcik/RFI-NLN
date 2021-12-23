@@ -28,7 +28,8 @@ do
 								  -patch_stride_y $patch \
 								  -data LOFAR\
 								  -data_path /home/mmesarcik/data/LOFAR/uncompressed/\
-								  -neighbors 1 2 5 10 16 20\
+								  -neighbors 1 2 5 10\
+								  -alpha 0 0.25 0.5 0.75 0.9 1.0\
 								  -algorithm knn\
 								  -seed $d$seed | tee -a lofar.log 
 		done
