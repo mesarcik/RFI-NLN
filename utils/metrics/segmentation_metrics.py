@@ -8,7 +8,6 @@ from sklearn.metrics import (roc_curve,
                              roc_auc_score, 
                              precision_recall_curve)
 from inference import infer, get_error
-from utils import cmd_input 
 from utils.data import *
 from utils.metrics import nln, get_nln_errors
 from reporting import plot_neighs
@@ -16,14 +15,14 @@ from matplotlib import pyplot as plt
 
 import time
 
-def accuracy_metrics(model,
-                     train_images,
-                     test_images,
-                     test_labels,
-                     test_masks,
-                     test_masks_orig,
-                     model_type,
-                     args):
+def evaluate_performance(model,
+                         train_images,
+                         test_images,
+                         test_labels,
+                         test_masks,
+                         test_masks_orig,
+                         model_type,
+                         args):
 
     """
         Calculate accuracy metrics for MVTEC AD as reported by the paper

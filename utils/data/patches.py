@@ -122,7 +122,7 @@ def reconstruct(patches,args, labels=None):
 
     """
     t = patches.transpose(0,2,1,3)
-    n_patches = sizes[str(args.anomaly_class)]//args.patch_x
+    n_patches = sizes[str(args.data)]//args.patch_x
     recon = np.empty([patches.shape[0]//n_patches**2, args.patch_x*n_patches,args.patch_y*n_patches,patches.shape[-1]])
 
     start, counter, indx, b  = 0, 0, 0, []
@@ -165,7 +165,7 @@ def reconstruct_latent_patches(patches, args, labels=None):
         np.array, (optional) np.array
     """
     
-    n_patches = sizes[str(args.anomaly_class)]//args.patch_x
+    n_patches = sizes[str(args.data)]//args.patch_x
     recon = np.empty([patches.shape[0]//n_patches**2, n_patches**2, patches.shape[-1]])
 
     start, end, labels_recon = 0, n_patches**2, []

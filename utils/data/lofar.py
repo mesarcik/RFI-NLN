@@ -44,12 +44,12 @@ def get_lofar_data(directory, args, num_baselines=800):
 
     files = glob('{}/*.npy'.format(directory))
     data = np.empty([len(files)*num_baselines, 
-                     sizes[args.anomaly_class], 
-                     sizes[args.anomaly_class], 1], 
+                     sizes[args.data], 
+                     sizes[args.data], 1], 
                      dtype=np.float32)
     masks = np.empty([len(files)*num_baselines, 
-                     sizes[args.anomaly_class], 
-                     sizes[args.anomaly_class], 1], 
+                     sizes[args.data], 
+                     sizes[args.data], 1], 
                      dtype=np.bool)
 
     strt, fnnsh = 0, num_baselines
@@ -60,8 +60,8 @@ def get_lofar_data(directory, args, num_baselines=800):
 
         temp_data, temp_flags = _random_crop(np.absolute(temp_data[...,0:1]).astype('float32'),
                                              temp_flags[...,0:1].astype('int'),
-                                             (sizes[args.anomaly_class], 
-                                             sizes[args.anomaly_class]))
+                                             (sizes[args.data], 
+                                             sizes[args.data]))
         data[strt:fnnsh,...] = temp_data
         masks[strt:fnnsh,...] = temp_flags.astype('bool')
 
