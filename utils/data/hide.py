@@ -43,11 +43,11 @@ def get_hide_data(args, sigma=5):
         print('Creating joined HIDE dataset')
 
     files = glob('{}/*/*.h5'.format(args.data_path))
-    data = np.empty([len(files)//2, 
+    data = np.empty([len(files), 
                      sizes[args.data], 
                      sizes[args.data], 1], 
                      dtype=np.float32)
-    masks = np.empty([len(files)//2, 
+    masks = np.empty([len(files), 
                      sizes[args.data], 
                      sizes[args.data], 1], 
                      dtype=np.bool)
