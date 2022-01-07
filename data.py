@@ -21,11 +21,15 @@ def load_hide(args):
     (train_data, train_masks, 
             test_data, test_masks) = get_hide_data(args)
 
-    test_data = np.clip(np.fabs(test_data), 30, 210)
+    test_data = np.clip(np.fabs(test_data), 0, 500)
     test_data -= np.amin(test_data)
     test_data = process(test_data, per_image=False)
 
-    train_data = np.clip(np.fabs(train_data), 30, 210)
+    #mi, ma = np.min(data), np.max(data)
+    #output = (data - mi)/(ma -mi)
+    #output = output.astype('float32')
+
+    train_data = np.clip(np.fabs(train_data), 0, 500)
     train_data -= np.amin(train_data)
     train_data = process(train_data, per_image=False)
 

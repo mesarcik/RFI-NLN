@@ -8,9 +8,9 @@ d=$(date +'%m-%d-%Y-%I-%M_')
 atype=MISO
 perc=0
 
-for patch in 8 16 32
+for patch in 16 
 do
-		for ld in 16 32 64 128
+		for ld in 32 
 		do
 				python -u main.py -limit $limit \
 								  -data_path /home/mmesarcik/data/HIDE/full_year/seek_cache\
