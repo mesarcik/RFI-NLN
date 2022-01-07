@@ -22,7 +22,7 @@ def _random_crop(image,mask,size):
         fnnsh+=BATCH_SIZE
     return output_images, output_masks
 
-def get_lofar_data(directory, args, num_baselines=800):
+def get_lofar_data(directory, args, num_baselines=400):
     """"
         Walks through LOFAR dataset and returns sampled and cropped data 
         

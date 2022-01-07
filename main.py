@@ -8,18 +8,18 @@ def main():
     """
         Reads data and cmd arguments and trains models
     """
-    gpus = tf.config.list_physical_devices('GPU')
-    if gpus:
-      # Restrict TensorFlow to only allocate 16GB of memory on the first GPU
-      try:
-        tf.config.set_logical_device_configuration(
-            gpus[0],
-            [tf.config.LogicalDeviceConfiguration(memory_limit=2**15)])
-        logical_gpus = tf.config.list_logical_devices('GPU')
-        print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
-      except RuntimeError as e:
-        # Virtual devices must be set before GPUs have been initialized
-        print(e)
+    #gpus = tf.config.list_physical_devices('GPU')
+    #if gpus:
+    #  # Restrict TensorFlow to only allocate 16GB of memory on the first GPU
+    #  try:
+    #    tf.config.set_logical_device_configuration(
+    #        gpus[0],
+    #        [tf.config.LogicalDeviceConfiguration(memory_limit=2**16)])
+    #    logical_gpus = tf.config.list_logical_devices('GPU')
+    #    print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
+    #  except RuntimeError as e:
+    #    # Virtual devices must be set before GPUs have been initialized
+    #    print(e)
 
     if args.args.data == 'HERA':
         data  = load_hera(args.args)
@@ -46,14 +46,14 @@ def main():
                test_masks_orig, 
                args.args)
 
-    train_resnet(ae_train_dataset,
-             ae_train_data,
-             ae_train_labels,
-             test_data,
-             test_labels, 
-             test_masks, 
-             test_masks_orig, 
-             args.args)
+    #train_resnet(ae_train_dataset,
+    #         ae_train_data,
+    #         ae_train_labels,
+    #         test_data,
+    #         test_labels, 
+    #         test_masks, 
+    #         test_masks_orig, 
+    #         args.args)
 
     train_ae(ae_train_dataset,
              ae_train_data,
