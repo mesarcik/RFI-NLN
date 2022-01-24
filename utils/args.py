@@ -53,8 +53,8 @@ parser.add_argument('-patch_stride_x', metavar='-psx', type=int,
                     help = 'x-dimension of strides of patches')
 parser.add_argument('-patch_stride_y', metavar='-psy', type=int, 
                     help = 'y-dimension of strides of patches')
-parser.add_argument('-rfi', metavar='-rfi', type=float, default=0.0, 
-                    help = 'percentage simulated rfi')
+parser.add_argument('-rfi', metavar='-rfi', type=str, default=None, 
+                    help = 'HERA RFI label to exclude from training')
 parser.add_argument('-rfi_threshold', metavar='-rfi_threshold', type=float, default=None, 
                     help = 'AOFlagger base threshold')
 

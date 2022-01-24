@@ -104,10 +104,11 @@ def load_hera(args):
 
     if args.limit is not None:
         train_indx = np.random.permutation(len(train_data))[:args.limit]
-        test_indx = np.random.permutation(len(test_data))[:args.limit]
-
         train_data  = train_data [train_indx]
         train_masks = train_masks[train_indx]
+        train_labels = train_labels[train_indx]
+
+        #test_indx = np.random.permutation(len(test_data))[:args.limit]
         #test_data = test_data[test_indx]
         #test_masks = test_masks[test_indx]
 
@@ -120,6 +121,13 @@ def load_hera(args):
 
     test_data =  process(test_data, per_image=True).astype(np.float16)
     train_data = process(train_data, per_image=True).astype(np.float16)
+
+    if args.rfi is not None:
+        _mask = np.array([args.rfi not in label for label in train_labels])
+        train_data = train_data[_mask]
+        train_masks = train_masks[_mask]
+        train_labels= train_labels[_mask]
+
 
     if args.patches:
         p_size = (1,args.patch_x, args.patch_y, 1)
