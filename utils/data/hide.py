@@ -5,6 +5,7 @@ from h5py import File
 from tqdm import tqdm 
 from glob import glob
 import tensorflow as tf
+import cv2
 from utils.data.defaults import sizes 
 from sklearn.model_selection import train_test_split
 from model_config import BATCH_SIZE
@@ -58,29 +59,60 @@ def get_hide_data(args, sigma=5):
                      sizes[args.data], 
                      sizes[args.data], 1], 
                      dtype=np.bool)
+
+    signal_data = np.empty([len(mixture_data_files), 
+                     sizes[args.data], 
+                     sizes[args.data], 1], 
+                     dtype=np.float32)
+    signal_masks = np.empty([len(rfi_files), 
+                     sizes[args.data], 
+                     sizes[args.data], 1], 
+                     dtype=np.bool)
+
+    kernel = np.ones((2,2), dtype=np.uint8)
+
     for i in tqdm(range(len(mixture_data_files))):
         with File(mixture_data_files[i], "r") as f_data, File(rfi_files[i], "r") as f_rfi:
             mixture_data = f_data['data'][:].astype(np.float32)
             rfi = f_rfi['data'][:].astype(np.float32)
-            #signal = mixture_data - rfi
-            #snr = np.mean(signal)/np.mean(rfi)
             snr = 0.670 # SNR magic number from Sadr et. al. 
+
+            #m = rfi>(50*snr)
+            #img = cv2.cvtColor(m.astype(np.uint8), cv2.COLOR_GRAY2BGR) 
+            #out = cv2.morphologyEx(img, cv2.MORPH_OPEN, kernel)
+            #signal_mask = out.astype(np.bool)[...,0]
+            #signal=f_data['data'][:].astype(np.float32)
+
+            #snr = np.mean(signal)/np.mean(rfi)
+            #signal = mixture_data - rfi
+            #signal_mask = np.zeros(signal.shape)
             mask = rfi>(sigma*snr)
     
         mixture_data = np.expand_dims(mixture_data, axis=[0,-1])
         mask = np.expand_dims(mask, axis=[0,-1])
+        #signal = np.expand_dims(signal, axis=[0,-1])
+        #signal_mask = np.expand_dims(signal_mask, axis=[0,-1])
         
         mixture_data, mask = _random_crop(mixture_data.astype('float32'),
                                              mask.astype('int'),
                                              (sizes[args.data], sizes[args.data]))
+        #signal, signal_mask = _random_crop(signal.astype('float32'),
+        #                                    signal_mask.astype('int'),
+        #                                     (sizes[args.data], sizes[args.data]))
         data[i:i+1,...] = mixture_data
         masks[i:i+1,...] = mask.astype('bool')
+
+        #signal_data[i:i+1,...] = signal 
+        #signal_masks[i:i+1,...] = signal_mask.astype('bool')
 
     (train_data, test_data,
      train_masks, test_masks) = train_test_split(data, masks, test_size=0.1, random_state=42)# 0.1*365 /aprox 1 month
 
-    pickle.dump((train_data, train_masks, test_data, test_masks), open('{}/joined_dataset.pickle'.format(args.data_path), 'wb'), protocol=4)
+    #(train_data, _,
+    # train_masks, _) = train_test_split(signal_data, signal_masks, test_size=0.1, random_state=42)# 0.1*365 /aprox 1 month
 
+#    pickle.dump((train_data, train_masks, test_data, test_masks), open('{}/joined_dataset.pickle'.format(args.data_path), 'wb'), protocol=4)
+#
     return train_data, train_masks, test_data, test_masks
 
 
