@@ -247,35 +247,43 @@ def UNET(args, n_filters = 16, dropout = 0.05, batchnorm = True):
     #p2 = layers.MaxPooling2D((2, 2))(c2)
     p2 = layers.Dropout(dropout)(c2)
     
-    c3 = conv2d_block(p2, 
-                      n_filters * 4, 
-                      kernel_size = 3, 
-                      stride=(2,2),
-                      batchnorm = batchnorm)
-    #p3 = layers.MaxPooling2D((2, 2))(c3)
-    p3 = layers.Dropout(dropout)(c3)
+    if args.input_shape[1] >8:
+        c3 = conv2d_block(p2, 
+                          n_filters * 4, 
+                          kernel_size = 3, 
+                          stride=(2,2),
+                          batchnorm = batchnorm)
+        #p3 = layers.MaxPooling2D((2, 2))(c3)
+        p3 = layers.Dropout(dropout)(c3)
+    else: p3 = p2
     
-    c4 = conv2d_block(p3, 
-                      n_filters * 8, 
-                      kernel_size = 3, 
-                      stride=(2,2),
-                      batchnorm = batchnorm)
-    #p4 = layers.MaxPooling2D((2, 2))(c4)
-    p4 = layers.Dropout(dropout)(c4)
+    if args.input_shape[1] >16:
+        c4 = conv2d_block(p3, 
+                          n_filters * 8, 
+                          kernel_size = 3, 
+                          stride=(2,2),
+                          batchnorm = batchnorm)
+        #p4 = layers.MaxPooling2D((2, 2))(c4)
+        p4 = layers.Dropout(dropout)(c4)
+    else: p4 = p3
     
     c5 = conv2d_block(p4, n_filters = n_filters * 16, kernel_size = 3, stride=(2,2), batchnorm = batchnorm)
     
     # Expansive Path
-    u6 = layers.Conv2DTranspose(n_filters * 8, (3, 3), strides = (2, 2), padding = 'same')(c5)
-    u6 = layers.concatenate([u6, c4])
-    u6 = layers.Dropout(dropout)(u6)
-    c6 = conv2d_block(u6, n_filters * 8, kernel_size = 3, batchnorm = batchnorm)
+    if args.input_shape[1]>16: 
+        u6 = layers.Conv2DTranspose(n_filters * 8, (3, 3), strides = (2, 2), padding = 'same')(c5)
+        u6 = layers.concatenate([u6, c4])
+        u6 = layers.Dropout(dropout)(u6)
+        c6 = conv2d_block(u6, n_filters * 8, kernel_size = 3, batchnorm = batchnorm)
+    else: c6=c5
     
-    u7 = layers.Conv2DTranspose(n_filters * 4, (3, 3), strides = (2, 2), padding = 'same')(c6)
-    u7 = layers.concatenate([u7, c3])
-    u7 = layers.Dropout(dropout)(u7)
-    c7 = conv2d_block(u7, n_filters * 4, kernel_size = 3, batchnorm = batchnorm)
-    
+    if args.input_shape[1]>8: 
+        u7 = layers.Conv2DTranspose(n_filters * 4, (3, 3), strides = (2, 2), padding = 'same')(c6)
+        u7 = layers.concatenate([u7, c3])
+        u7 = layers.Dropout(dropout)(u7)
+        c7 = conv2d_block(u7, n_filters * 4, kernel_size = 3, batchnorm = batchnorm)
+    else: c7=c6
+
     u8 = layers.Conv2DTranspose(n_filters * 2, (3, 3), strides = (2, 2), padding = 'same')(c7)
     u8 = layers.concatenate([u8, c2])
     u8 = layers.Dropout(dropout)(u8)

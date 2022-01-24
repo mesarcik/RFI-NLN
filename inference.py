@@ -93,8 +93,8 @@ def get_error(model_type,
     elif model_type == 'UNET':
         error = x_hat
 
-    if ab:
-        np.abs(error,dtype=np.float32, out=error)
+    #if ab:
+    #    np.abs(error,dtype=np.float32, out=error)
 
     if mean:
         error = np.mean(error,axis=tuple(range(1,error.ndim)))

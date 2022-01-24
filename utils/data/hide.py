@@ -5,6 +5,7 @@ from h5py import File
 from tqdm import tqdm 
 from glob import glob
 import tensorflow as tf
+import cv2
 from utils.data.defaults import sizes 
 from sklearn.model_selection import train_test_split
 from model_config import BATCH_SIZE
@@ -26,7 +27,9 @@ def _random_crop(image,mask,size):
 def get_hide_data(args, sigma=5):
     """"
         Walks through the simulated HIDE data and creates a training set generated from:
-        hide --strategy-start=2016-03-21-00:00:00 --strategy-end=2016-03-21-23:59:00 --verbose=True hide.config.bleien7m
+        hide --strategy-start=2016-01-01-00:00:00 --strategy-end=2016-12-31-23:59:00 --verbose=True hide.config.bleien7m
+        seek --file-prefix='./synthesized' --post-processing-prefix='synthesized/seek_cache'\
+              --chi-1=20 --overwrite=True seek.config.process_survey_fft
 
         
         args.data_path (str): Directory where LOFAR dataset resides
@@ -42,37 +45,74 @@ def get_hide_data(args, sigma=5):
     else:
         print('Creating joined HIDE dataset')
 
-    files = glob('{}/*/*.h5'.format(args.data_path))
-    data = np.empty([len(files), 
+    mixture_data_files = glob('{}/*.h5'.format(args.data_path))
+
+    rfi_path = args.data_path.split('full_year')
+    rfi_path = os.path.join(rfi_path[0], 'rfi_full_year','seek_cache')
+    rfi_files = glob('{}/*.h5'.format(rfi_path))
+
+    data = np.empty([len(mixture_data_files), 
                      sizes[args.data], 
                      sizes[args.data], 1], 
                      dtype=np.float32)
-    masks = np.empty([len(files), 
+    masks = np.empty([len(rfi_files), 
                      sizes[args.data], 
                      sizes[args.data], 1], 
                      dtype=np.bool)
-    for i in tqdm(range(len(files))):# loop over step size 2 to make data shape > (256,256)
-        f = File(files[i])
-        temp_data, temp_rfi = f['P/Phase1'][()], f['RFI/Phase0'][()] 
-        f.close()
-    
-        temp_data = np.expand_dims(temp_data, axis=[0,-1])
-        temp_rfi = np.expand_dims(temp_rfi, axis=[0,-1])
-        snr = (np.mean(temp_data)/np.mean(temp_rfi))
 
-        temp_masks = temp_rfi>(0.1*np.std(temp_data))
+    signal_data = np.empty([len(mixture_data_files), 
+                     sizes[args.data], 
+                     sizes[args.data], 1], 
+                     dtype=np.float32)
+    signal_masks = np.empty([len(rfi_files), 
+                     sizes[args.data], 
+                     sizes[args.data], 1], 
+                     dtype=np.bool)
+
+    kernel = np.ones((2,2), dtype=np.uint8)
+
+    for i in tqdm(range(len(mixture_data_files))):
+        with File(mixture_data_files[i], "r") as f_data, File(rfi_files[i], "r") as f_rfi:
+            mixture_data = f_data['data'][:].astype(np.float32)
+            rfi = f_rfi['data'][:].astype(np.float32)
+            snr = 0.670 # SNR magic number from Sadr et. al. 
+
+            #m = rfi>(50*snr)
+            #img = cv2.cvtColor(m.astype(np.uint8), cv2.COLOR_GRAY2BGR) 
+            #out = cv2.morphologyEx(img, cv2.MORPH_OPEN, kernel)
+            #signal_mask = out.astype(np.bool)[...,0]
+            #signal=f_data['data'][:].astype(np.float32)
+
+            #snr = np.mean(signal)/np.mean(rfi)
+            #signal = mixture_data - rfi
+            #signal_mask = np.zeros(signal.shape)
+            mask = rfi>(sigma*snr)
+    
+        mixture_data = np.expand_dims(mixture_data, axis=[0,-1])
+        mask = np.expand_dims(mask, axis=[0,-1])
+        #signal = np.expand_dims(signal, axis=[0,-1])
+        #signal_mask = np.expand_dims(signal_mask, axis=[0,-1])
         
-        temp_data, temp_masks = _random_crop(temp_data.astype('float32'),
-                                             temp_masks.astype('int'),
+        mixture_data, mask = _random_crop(mixture_data.astype('float32'),
+                                             mask.astype('int'),
                                              (sizes[args.data], sizes[args.data]))
-        data[i:i+1,...] = temp_data
-        masks[i:i+1,...] = temp_masks.astype('bool')
+        #signal, signal_mask = _random_crop(signal.astype('float32'),
+        #                                    signal_mask.astype('int'),
+        #                                     (sizes[args.data], sizes[args.data]))
+        data[i:i+1,...] = mixture_data
+        masks[i:i+1,...] = mask.astype('bool')
+
+        #signal_data[i:i+1,...] = signal 
+        #signal_masks[i:i+1,...] = signal_mask.astype('bool')
 
     (train_data, test_data,
-     train_masks, test_masks) = train_test_split(data, masks, test_size=0.25, random_state=42)
+     train_masks, test_masks) = train_test_split(data, masks, test_size=0.1, random_state=42)# 0.1*365 /aprox 1 month
 
-    pickle.dump((train_data, train_masks, test_data, test_masks), open('{}/joined_dataset.pickle'.format(args.data_path), 'wb'), protocol=4)
+    #(train_data, _,
+    # train_masks, _) = train_test_split(signal_data, signal_masks, test_size=0.1, random_state=42)# 0.1*365 /aprox 1 month
 
+#    pickle.dump((train_data, train_masks, test_data, test_masks), open('{}/joined_dataset.pickle'.format(args.data_path), 'wb'), protocol=4)
+#
     return train_data, train_masks, test_data, test_masks
 
 
