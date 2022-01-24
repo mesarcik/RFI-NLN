@@ -34,14 +34,14 @@ def main():
                test_masks_orig, 
                args.args)
 
-    #train_resnet(ae_train_dataset,
-    #         ae_train_data,
-    #         ae_train_labels,
-    #         test_data,
-    #         test_labels, 
-    #         test_masks, 
-    #         test_masks_orig, 
-    #         args.args)
+    train_resnet(ae_train_dataset,
+             ae_train_data,
+             ae_train_labels,
+             test_data,
+             test_labels, 
+             test_masks, 
+             test_masks_orig, 
+             args.args)
 
     train_ae(ae_train_dataset,
              ae_train_data,

@@ -119,8 +119,8 @@ def load_hera(args):
         test_masks = np.expand_dims(test_masks,axis=-1) 
         train_masks = np.expand_dims(train_masks,axis=-1) 
 
-    test_data =  process(test_data, per_image=True).astype(np.float16)
-    train_data = process(train_data, per_image=True).astype(np.float16)
+    test_data =  process(test_data, per_image=False).astype(np.float16)
+    train_data = process(train_data, per_image=False).astype(np.float16)
 
     if args.rfi is not None:
         _mask = np.array([args.rfi not in label for label in train_labels])

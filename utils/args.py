@@ -77,7 +77,7 @@ elif args.data == 'MVTEC':
         args.input_shape =(1024,1024,3)
 
 elif args.data == 'HERA':
-    args.input_shape =(64, 256,1)
+    args.input_shape =(512, 512,1)
 
 elif args.data == 'HIDE':
     args.input_shape =(256, 256,1)
