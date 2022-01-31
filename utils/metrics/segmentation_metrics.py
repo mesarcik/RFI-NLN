@@ -180,7 +180,7 @@ def evaluate_performance(model,
         
 
         dists_recon = get_dists(neighbours_dist, args)
-        alpha=0.3
+        alpha=0.7
         combined_recon = alpha*normalise(nln_error_recon) + (1-alpha)*normalise(dists_recon)
 
         (nln_ao_auroc, nln_true_auroc, 

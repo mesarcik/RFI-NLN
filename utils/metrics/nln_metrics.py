@@ -3,6 +3,7 @@ import numpy as np
 from time import time
 import pickle
 from sklearn import metrics,neighbors
+import faiss 
 from inference import infer, get_error
 from utils.data import reconstruct, reconstruct_latent_patches, sizes, process
 from model_config import *
@@ -33,39 +34,11 @@ def nln(z, z_query, x_hat_train, algorithm, neighbours, radius=None):
 
     """
     if algorithm == 'knn':
-        nbrs = neighbors.NearestNeighbors(n_neighbors= neighbours,
-                                          algorithm='ball_tree',
-                                          n_jobs=-1).fit(z) 
-
-        neighbours_dist, neighbours_idx =  nbrs.kneighbors(z_query,return_distance=True)#KNN
+        index = faiss.IndexFlatL2(z.shape[1])
+        index.add(z.astype(np.float32))
+        neighbours_dist, neighbours_idx = index.search(z_query.astype(np.float32), neighbours)
         neighbour_mask  = np.zeros([len(neighbours_idx)], dtype=bool)
 
-    elif algorithm == 'frnn':
-        nbrs = neighbors.NearestNeighbors(radius=radius, 
-                                          algorithm='ball_tree',
-                                          n_jobs=-1).fit(z) # using radius
-
-        neighbours_dist, neighbours_idx =  nbrs.radius_neighbors(z_query,
-                                                  return_distance=True,
-                                                  sort_results=True)#radius
-        neighbours_idx_ = -1*np.ones([len(neighbours_idx), neighbours],dtype=int)
-        neighbour_mask  = np.zeros([len(neighbours_idx)], dtype=bool)
-
-        for i,n in enumerate(neighbours_idx):
-            if len(n) == 0:
-                neighbour_mask[i] = [True]
-                pass
-            elif len(n) > neighbours:
-                neighbours_idx_[i,:] = n[:neighbours]
-            else: 
-                neighbours_idx_[i,:len(n)] = n
-
-        neighbours_idx = neighbours_idx_
-
-        em = np.empty([1,x_hat_train.shape[1], x_hat_train.shape[2] ,x_hat_train.shape[-1]])
-        em[:] = np.nan
-
-        np.concatenate([x_hat_train, em],out=x_hat_train)#if no neighbours make error large
         
     return neighbours_dist, neighbours_idx, x_hat_train, neighbour_mask
 
@@ -267,42 +240,6 @@ def get_nln_metrics(model,
 
             (max_auc,max_neighbours,
                     max_radius,index_counter,d) =  get_max_score(temp_args)
-
-        elif args.algorithm == 'frnn':
-            #TODO: add MISO and SIMO distinctions
-            for r in  args.radius:
-                t = time()
-                neighbours_dist, neighbours_idx, x_hat_train, neighbour_mask = nln(z, 
-                                                                                   z_query, 
-                                                                                   x_hat_train, 
-                                                                                   args.algorithm, 
-                                                                                   n_bour, 
-                                                                                   radius=r)
-                error = get_nln_errors(model,
-                                       model_type,
-                                       z_query,
-                                       z,
-                                       test_images,
-                                       x_hat_train,
-                                       neighbours_idx,
-                                       neighbour_mask,
-                                       args)
-
-                if args.patches:  
-                    if error.ndim ==4:
-                        error, test_labels_ = reconstruct(error, args, test_labels) 
-                    else:
-                        error, test_labels_ = reconstruct_latent_patches(error, args, test_labels) 
-                else: test_labels_ = test_labels
-
-                error =np.mean(error,axis=tuple(range(1,error.ndim)))
-
-                temp_args = [error,test_labels_,args.anomaly_class,
-                             args.neighbors, args.radius,n_bour,r, max_auc,
-                             max_neighbours,max_radius,index_counter,d,t, args.anomaly_type]
-
-                (max_auc,max_neighbours,
-                        max_radius,index_counter,d) = get_max_score(temp_args)
 
     with open('outputs/{}/{}/{}/latent_scores.pkl'.format(model_type,args.anomaly_class,args.model_name),'wb') as f:
         pickle.dump(d,f)
