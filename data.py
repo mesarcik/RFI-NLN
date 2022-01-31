@@ -104,22 +104,39 @@ def load_hera(args):
 
     if args.limit is not None:
         train_indx = np.random.permutation(len(train_data))[:args.limit]
-        test_indx = np.random.permutation(len(test_data))[:args.limit]
-
         train_data  = train_data [train_indx]
         train_masks = train_masks[train_indx]
+        train_labels = train_labels[train_indx]
+
+        #test_indx = np.random.permutation(len(test_data))[:args.limit]
         #test_data = test_data[test_indx]
         #test_masks = test_masks[test_indx]
 
-    test_masks_orig = copy.deepcopy(test_masks)
-    if args.rfi_threshold is not None:
-        test_masks = flag_data(test_data,args)
-        train_masks = flag_data(train_data,args)
-        test_masks = np.expand_dims(test_masks,axis=-1) 
-        train_masks = np.expand_dims(train_masks,axis=-1) 
+    if args.rfi is not None:
+        _mask = np.array([args.rfi not in label for label in train_labels])
+        train_data = train_data[_mask]
+        train_masks = train_masks[_mask]
+        train_labels= train_labels[_mask]
 
-    test_data =  process(test_data, per_image=True).astype(np.float16)
-    train_data = process(train_data, per_image=True).astype(np.float16)
+        test_data, test_labels, test_masks, _ =  np.load('/home/mmesarcik/data/HERA/HERA_{}.pkl'.format(args.rfi), 
+                                                         allow_pickle=True)
+        test_masks = np.expand_dims(test_masks, axis=-1)
+    test_masks_orig = copy.deepcopy(test_masks)
+#    if args.rfi_threshold is not None:
+#        test_masks = flag_data(test_data,args)
+#        train_masks = flag_data(train_data,args)
+#        test_masks = np.expand_dims(test_masks,axis=-1) 
+#        train_masks = np.expand_dims(train_masks,axis=-1) 
+
+    test_data[test_data==0] = 0.001 # to make log normalisation happy
+    test_data = np.nan_to_num(np.log(test_data),nan=0)
+
+    train_data[train_data==0] = 0.001 # to make log normalisation happy
+    train_data = np.nan_to_num(np.log(train_data),nan=0)
+
+    test_data =  process(test_data, per_image=False).astype(np.float16)
+    train_data = process(train_data, per_image=False).astype(np.float16)
+
 
     if args.patches:
         p_size = (1,args.patch_x, args.patch_y, 1)
@@ -217,7 +234,7 @@ def load_lofar(args):
 
     """
 
-    train_data, train_masks, test_data, test_masks = get_lofar_data('/data/mmesarcik/LOFAR/uncompressed', args)
+    train_data, train_masks, test_data, test_masks = get_lofar_data('/home/mmesarcik/data/LOFAR/uncompressed', args)
 
 
     # add RFI to the data masks and labels 

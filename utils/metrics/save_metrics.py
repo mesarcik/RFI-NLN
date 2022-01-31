@@ -42,6 +42,7 @@ def save_metrics(model_type,
                                      'Percentage Anomaly',
                                      'N_Training_Samples',
                                      'RFI_Threshold',
+                                     'OOD_RFI',
 
                                      'AUROC_AO',
                                      'AUROC_TRUE',
@@ -87,6 +88,7 @@ def save_metrics(model_type,
                     'Percentage Anomaly':perc,
                     'N_Training_Samples':len(train_data),
                     'RFI_Threshold':args.rfi_threshold,
+                    'OOD_RFI':args.rfi,
 
 
                      'AUROC_AO':   kwargs['ae_ao_auroc']  ,

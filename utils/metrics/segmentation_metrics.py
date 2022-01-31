@@ -167,7 +167,6 @@ def evaluate_performance(model,
                                neighbour_mask,
                                args)
 
-
     if args.patches:
         if nln_error.ndim ==4:
             nln_error_recon = patches.reconstruct(nln_error, args)
@@ -244,6 +243,7 @@ def evaluate_performance(model,
             combined_ao_ious,   combined_true_ious)
 
 def get_metrics(test_masks_recon,test_masks_orig_recon, error_recon):
+
     ## AUROC AOFlagger  
     #fpr,tpr, thr = roc_curve(test_masks_recon.flatten()>0, 
     #                         error_recon.flatten())
@@ -255,6 +255,7 @@ def get_metrics(test_masks_recon,test_masks_orig_recon, error_recon):
     true_auroc = auc(fpr, tpr)
 
     # IOU AOFlagger  
+
     #ao_iou = iou_score(error_recon, 
     #                   test_masks_recon, 
     #                   fpr, 
@@ -270,6 +271,7 @@ def get_metrics(test_masks_recon,test_masks_orig_recon, error_recon):
     # AUPRC AOFlagger  
     #precision, recall, thresholds = precision_recall_curve(test_masks_recon.flatten()>0, 
     #                                                       error_recon.flatten())
+
     #ao_auprc = auc(recall, precision)
 
     # AUPRC True 
