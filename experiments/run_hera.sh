@@ -7,16 +7,15 @@ seed=$(openssl rand -hex 3)
 d=$(date +'%m-%d-%Y-%I-%M_')
 atype=MISO
 
-for ld in 32 64 128 256
+for ld in 32 64 128
 do
-		for patch in 8 16 32 64 128
+		for patch in 8 16 32 64
 		do
 				python -u main.py -limit $limit\
 								  -data HERA\
-								  -data_path /home/mmesarcik/data/HERA/HERA_6_28-01-2022_MIXED.pkl\
+								  -data_path /home/mmesarcik/data/HERA/HERA_6_31-01-2022_MIXED.pkl\
 								  -anomaly_class rfi\
 								  -rfi_threshold 666\
-								  #-rfi $rfi\
 								  -anomaly_type $atype\
 								  -percentage_anomaly 0\
 								  -epochs $epochs \
