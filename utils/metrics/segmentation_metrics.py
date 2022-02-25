@@ -72,9 +72,9 @@ def evaluate_performance(model,
 
         for i in range(10):
             r = np.random.randint(len(test_data_recon))
-            axs[i,0].imshow(test_data_recon[r,...,0].astype(np.float32))
-            axs[i,1].imshow(test_masks_recon[r,...,0].astype(np.float32))
-            axs[i,2].imshow(x_hat_recon[r,...,0].astype(np.float32))
+            axs[i,0].imshow(test_data_recon[r,...,0].astype(np.float32), interpolation='nearest', aspect='auto')
+            axs[i,1].imshow(test_masks_recon[r,...,0].astype(np.float32), interpolation='nearest', aspect='auto')
+            axs[i,2].imshow(x_hat_recon[r,...,0].astype(np.float32), interpolation='nearest', aspect='auto')
         plt.savefig('outputs/{}/{}/{}/neighbours.png'.format(model_type,
                                                        args.anomaly_class,
                                                        args.model_name), dpi=300)
@@ -113,9 +113,9 @@ def evaluate_performance(model,
 
         for i in range(10):
             r = np.random.randint(len(test_data_recon))
-            axs[i,0].imshow(test_data_recon[r,...,0].astype(np.float32))
-            axs[i,1].imshow(test_masks_recon[r,...,0].astype(np.float32))
-            axs[i,2].imshow(dists_recon[r,...,0].astype(np.float32))
+            axs[i,0].imshow(test_data_recon[r,...,0].astype(np.float32), interpolation='nearest', aspect='auto')
+            axs[i,1].imshow(test_masks_recon[r,...,0].astype(np.float32), interpolation='nearest', aspect='auto')
+            axs[i,2].imshow(dists_recon[r,...,0].astype(np.float32), interpolation='nearest', aspect='auto')
         plt.savefig('outputs/{}/{}/{}/neighbours.png'.format(model_type,
                                                        args.anomaly_class,
                                                        args.model_name), dpi=300)
@@ -195,17 +195,17 @@ def evaluate_performance(model,
     combined_ao_aurocs, combined_ao_auprcs, combined_ao_ious  = [], [],[]
     for alpha in args.alphas:
         combined_recon = alpha*normalise(nln_error_recon) + (1-alpha)*normalise(dists_recon)
-        (_, combined_true_auroc, 
-         _, combined_true_auprc,      
-         _,   combined_true_iou) = get_metrics(test_masks_recon, 
+        (combined_ao_auroc, combined_true_auroc, 
+         combined_ao_auprc, combined_true_auprc,      
+         combined_ao_iou,   combined_true_iou) = get_metrics(test_masks_recon, 
                                                        test_masks_orig_recon, 
                                                        combined_recon)
         combined_true_aurocs.append(combined_true_auroc)
         combined_true_auprcs.append(combined_true_auprc)
         combined_true_ious.append(combined_true_iou)
-        combined_ao_aurocs.append(-1)
-        combined_ao_auprcs.append(-1)
-        combined_ao_ious.append(-1)
+        combined_ao_aurocs.append(combined_ao_auroc)
+        combined_ao_auprcs.append(combined_ao_auprc)
+        combined_ao_ious.append(combined_ao_iou)
 
     fig, axs = plt.subplots(10,6, figsize=(10,7))
     axs[0,0].set_title('Inp',fontsize=5)
@@ -217,12 +217,12 @@ def evaluate_performance(model,
 
     for i in range(10):
         r = np.random.randint(len(test_data_recon))
-        axs[i,0].imshow(test_data_recon[r,...,0].astype(np.float32))
-        axs[i,1].imshow(test_masks_recon[r,...,0].astype(np.float32))
-        axs[i,2].imshow(error_recon[r,...,0].astype(np.float32))
-        axs[i,3].imshow(nln_error_recon[r,...,0].astype(np.float32))
-        axs[i,4].imshow(dists_recon[r,...,0].astype(np.float32))
-        axs[i,5].imshow(combined_recon[r,...,0].astype(np.float32))
+        axs[i,0].imshow(test_data_recon[r,...,0].astype(np.float32), interpolation='nearest', aspect='auto')
+        axs[i,1].imshow(test_masks_recon[r,...,0].astype(np.float32), interpolation='nearest', aspect='auto')
+        axs[i,2].imshow(error_recon[r,...,0].astype(np.float32), interpolation='nearest', aspect='auto')
+        axs[i,3].imshow(nln_error_recon[r,...,0].astype(np.float32), interpolation='nearest', aspect='auto')
+        axs[i,4].imshow(dists_recon[r,...,0].astype(np.float32), interpolation='nearest', aspect='auto')
+        axs[i,5].imshow(combined_recon[r,...,0].astype(np.float32), interpolation='nearest', aspect='auto')
     plt.savefig('outputs/{}/{}/{}/neighbours_{}.png'.format(model_type,
                                                    args.anomaly_class,
                                                    args.model_name,
@@ -280,6 +280,7 @@ def get_metrics(test_masks_recon,test_masks_orig_recon, error_recon):
     true_auprc = auc(recall, precision)
 
 
+    #return ao_auroc, true_auroc, ao_auprc, true_auprc, ao_iou, true_iou
     return -1, true_auroc, -1, true_auprc, -1, true_iou
     
 def get_threshold(fpr,tpr,thr,flag,test_labels,error,anomaly_class):

@@ -4,5 +4,5 @@ sizes= {
                   'MNIST':28,
                   'LOFAR':512,
                   'HIDE':256,
-                  'HERA':512,
+                  'HERA':1024,
 }

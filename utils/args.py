@@ -26,7 +26,7 @@ parser.add_argument('-neighbors', metavar='-n', type=int, nargs='+', default=[2,
 parser.add_argument('-radius', metavar='-r', type=float, nargs='+', default=[0.1,0.5,1,2,5,10],
                     help = 'The radius of the unit circle for finding neighbours in frNN')
 parser.add_argument('-algorithm', metavar='-nn', type=str, choices={"frnn", "knn"}, 
-                    default='frnn', help = 'The algorithm for calculating neighbours')
+                    default='knn', help = 'The algorithm for calculating neighbours')
 parser.add_argument('-data', metavar='-d', type=str, default='MNIST',
                     help = 'The dataset for training and testing the model on')
 

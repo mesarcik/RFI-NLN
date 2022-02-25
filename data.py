@@ -108,25 +108,13 @@ def load_hera(args):
         train_masks = train_masks[train_indx]
         train_labels = train_labels[train_indx]
 
-        #test_indx = np.random.permutation(len(test_data))[:args.limit]
-        #test_data = test_data[test_indx]
-        #test_masks = test_masks[test_indx]
-
-    if args.rfi is not None:
-        _mask = np.array([args.rfi not in label for label in train_labels])
-        train_data = train_data[_mask]
-        train_masks = train_masks[_mask]
-        train_labels= train_labels[_mask]
-
-        test_data, test_labels, test_masks, _ =  np.load('/home/mmesarcik/data/HERA/HERA_{}.pkl'.format(args.rfi), 
-                                                         allow_pickle=True)
-        test_masks = np.expand_dims(test_masks, axis=-1)
     test_masks_orig = copy.deepcopy(test_masks)
-#    if args.rfi_threshold is not None:
-#        test_masks = flag_data(test_data,args)
-#        train_masks = flag_data(train_data,args)
-#        test_masks = np.expand_dims(test_masks,axis=-1) 
-#        train_masks = np.expand_dims(train_masks,axis=-1) 
+
+    if args.rfi_threshold is not None:
+        test_masks = flag_data(test_data,args)
+        train_masks = flag_data(train_data,args)
+        test_masks = np.expand_dims(test_masks,axis=-1) 
+        train_masks = np.expand_dims(train_masks,axis=-1) 
 
     test_data[test_data==0] = 0.001 # to make log normalisation happy
     test_data = np.nan_to_num(np.log(test_data),nan=0)
@@ -160,7 +148,6 @@ def load_hera(args):
 
         ae_train_data  = train_data[np.invert(np.any(train_masks, axis=(1,2,3)))]
         ae_train_labels = train_labels[np.invert(np.any(train_masks, axis=(1,2,3)))]
-
 
     ae_train_data = ae_train_data.astype(np.float16) 
     train_data = train_data.astype(np.float16) 
