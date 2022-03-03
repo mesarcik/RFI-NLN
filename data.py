@@ -3,7 +3,6 @@ import numpy as np
 import copy
 import random
 from tqdm import tqdm
-#from hera_sim import rfi 
 from model_config import BUFFER_SIZE,BATCH_SIZE
 from sklearn.model_selection import train_test_split
 from utils.flagging import flag_data
@@ -182,66 +181,14 @@ def load_hera(args):
             test_masks_orig)
 
 
-def add_HERA_rfi(_data, _masks, args, expand=True, test_labels =None):
-    """
-        add synthetic RFI to data
-        _data (np.array): the data to add rfi to
-        _masks (np.array): the masks to add rfi to
-        args (Namespace): utils.cmd_args
-        expand (bool): expand RFI masks (add noise) or remove masks 
-
-    """
-#    args.rfi 
-    test_data = copy.deepcopy(_data) 
-    test_masks = copy.deepcopy(_masks) 
-    fqs = np.linspace(.1,.2,test_data.shape[1],endpoint=False)
-    lsts = np.linspace(0,2*np.pi,test_data.shape[1], endpoint=False)
-    for i in tqdm(range(len(test_data))): 
-        if random.randint(0,1):
-            stations = np.absolute(rfi.rfi_stations(fqs, lsts)/200)
-            test_data[i,...,0] += args.rfi*stations
-            test_masks[i,...,0] = np.logical_or(test_masks[i,...,0].astype('bool'),
-                                                stations>0)
-            if test_labels is not None:
-                test_labels[i] = 'rfi'
-        if random.randint(0,1):
-            impulse = np.absolute(rfi.rfi_impulse(fqs, 
-                                                  lsts, 
-                                                  impulse_strength=300, 
-                                                  impulse_chance=.05))
-            test_data[i,...,0] += args.rfi*impulse 
-            test_masks[i,...,0] = np.logical_or(test_masks[i,...,0].astype('bool'),
-                                                impulse>0)
-            if test_labels is not None:
-                test_labels[i] = 'rfi'
-        if random.randint(0,1):
-            dtv = np.absolute(rfi.rfi_dtv(fqs, 
-                                          lsts, 
-                                          dtv_strength=500,
-                                          dtv_chance=.1))
-            test_data[i,...,0] += args.rfi*dtv
-            test_masks[i,...,0] = np.logical_or(test_masks[i,...,0].astype('bool'),
-                                                dtv>0)
-            if test_labels is not None:
-                test_labels[i] = 'rfi'
-
-        
-    return test_data, test_labels, test_masks 
-
 def load_lofar(args):            
     """
         Load data from lofar 
 
     """
 
-    train_data, train_masks, test_data, test_masks = get_lofar_data('/home/mmesarcik/data/LOFAR/uncompressed', args)
+    train_data, train_masks, test_data, test_masks = get_lofar_data( args)
 
-
-    # add RFI to the data masks and labels 
-    if args.rfi != 0:
-        test_data, _,  test_masks = add_HERA_rfi(test_data, 
-                                              test_masks, 
-                                              args)
     test_data[test_data==0] = 0.001 # to make log normalisation happy
     test_data = np.nan_to_num(np.log(test_data),nan=0)
     test_data = process(test_data, per_image=False)
@@ -276,6 +223,23 @@ def load_lofar(args):
         test_labels = np.empty(len(test_data), dtype='object')
         test_labels[np.any(test_masks, axis=(1,2,3))] = args.anomaly_class
         test_labels[np.invert(np.any(test_masks, axis=(1,2,3)))] = 'normal'
+        if len(train_data) > 1000000:
+            ind = np.random.choice(len(train_data), 
+                                   1000000, 
+                                   replace=False)
+            train_data = train_data[ind]
+            train_labels = train_labels[ind]
+            train_masks = train_masks[ind]
+
+        
+        if len(test_data) > 1000000:
+            ind= np.random.choice(len(test_data), 
+                                   1000000, 
+                                   replace=False)
+            test_data = test_data[ind]
+            test_masks = test_masks[ind]
+            test_labels = test_labels[ind]
+
 
         ae_train_data  = train_data[np.invert(np.any(train_masks, axis=(1,2,3)))]
         ae_train_labels = train_labels[np.invert(np.any(train_masks, axis=(1,2,3)))]
