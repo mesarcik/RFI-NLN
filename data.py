@@ -67,9 +67,13 @@ def load_hide(args):
         test_labels = np.empty(len(test_data), dtype='object')
         test_labels[np.any(test_masks, axis=(1,2,3))] = args.anomaly_class
         test_labels[np.invert(np.any(test_masks, axis=(1,2,3)))] = 'normal'
+        
+        (ae_train_data, 
+         ae_train_labels, 
+         _)  =  np.load('/home/mmesarcik/data/HERA/HERA_02-03-2022_free.pkl')
 
-        ae_train_data  = train_data[np.invert(np.any(train_masks, axis=(1,2,3)))]
-        ae_train_labels = train_labels[np.invert(np.any(train_masks, axis=(1,2,3)))]
+        #ae_train_data  = train_data[np.invert(np.any(train_masks, axis=(1,2,3)))]
+        #ae_train_labels = train_labels[np.invert(np.any(train_masks, axis=(1,2,3)))]
 
     ae_train_data = ae_train_data.astype(np.float16) 
     train_data = train_data.astype(np.float16) 
@@ -109,7 +113,6 @@ def load_hera(args):
         train_labels = train_labels[train_indx]
 
     test_masks_orig = copy.deepcopy(test_masks)
-
     if args.rfi_threshold is not None:
         test_masks = flag_data(test_data,args)
         train_masks = flag_data(train_data,args)
@@ -145,9 +148,24 @@ def load_hera(args):
         test_labels[np.any(test_masks, axis=(1,2,3))] = args.anomaly_class
         test_labels[np.invert(np.any(test_masks, axis=(1,2,3)))] = 'normal'
 
+        (ae_train_data, 
+         ae_train_labels,
+         ae_train_masks)  =  np.load('/home/mmesarcik/data/HERA/HERA_03-03-2022_free.pkl',allow_pickle=True)
 
-        ae_train_data  = train_data[np.invert(np.any(train_masks, axis=(1,2,3)))]
-        ae_train_labels = train_labels[np.invert(np.any(train_masks, axis=(1,2,3)))]
+        ae_train_data[ae_train_data==0] = 0.001 # to make log normalisation happy
+        ae_train_data = np.nan_to_num(np.log(ae_train_data),nan=0)
+        ae_train_data = process(ae_train_data, per_image=False).astype(np.float16)
+        ae_train_data = get_patches(ae_train_data, None, p_size,s_size,rate,'VALID')
+
+        ae_train_masks = get_patches(ae_train_masks, None, p_size,s_size,rate,'VALID').astype(np.bool)
+
+        train_labels = np.empty(len(ae_train_data), dtype='object')
+        train_labels[np.any(ae_train_masks, axis=(1,2,3))] = args.anomaly_class
+        train_labels[np.invert(np.any(ae_train_masks, axis=(1,2,3)))] = 'normal'
+
+
+        #ae_train_data  = train_data[np.invert(np.any(train_masks, axis=(1,2,3)))]
+        #ae_train_labels = train_labels[np.invert(np.any(train_masks, axis=(1,2,3)))]
 
     ae_train_data = ae_train_data.astype(np.float16) 
     train_data = train_data.astype(np.float16) 

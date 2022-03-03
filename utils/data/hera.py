@@ -8,14 +8,14 @@ def get_hera_data(args):
     if args.rfi is not None:
         (test_data, 
          test_labels, 
-         test_masks)  =  np.load('/home/mmesarcik/data/HERA/HERA_25-02-2022_{}.pkl'.format(args.rfi),
+         test_masks)  =  np.load('/home/mmesarcik/data/HERA/HERA_02-03-2022_{}.pkl'.format(args.rfi),
                                                                                    allow_pickle=True)
         test_data[test_data==np.inf] = np.finfo(test_data.dtype).max
         rfi_models.remove(args.rfi)
 
         (train_data, 
          train_labels, 
-         train_masks)  =  np.load('/home/mmesarcik/data/HERA/HERA_25-02-2022_{}.pkl'.format('-'.join(rfi_models)),
+         train_masks)  =  np.load('/home/mmesarcik/data/HERA/HERA_02-03-2022_{}.pkl'.format('-'.join(rfi_models)),
                                                                                             allow_pickle=True)
         train_data[train_data==np.inf] = np.finfo(train_data.dtype).max
 
