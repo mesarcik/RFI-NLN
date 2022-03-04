@@ -94,15 +94,14 @@ def simulate(id_rfis):
     #########################################################################################
     #########################################################################################
 
-    if np.random.random(1)[0] >0.5:
-        if 'rfi_stations' in id_rfis:
-            sim.add(
-                "rfi_stations",
-                stations="/home/mmesarcik/anaconda3/envs/hera/lib/python3.7/site-packages/hera_sim/data/{}".format(station_models[
-                                                                                                                    np.random.randint(0,2)]),
-                component_name="rfi_stations",
-                seed="once",
-            )
+    if 'rfi_stations' in id_rfis:
+        sim.add(
+            "rfi_stations",
+            stations="/home/mmesarcik/anaconda3/envs/hera/lib/python3.7/site-packages/hera_sim/data/{}".format(station_models[
+                                                                                                                np.random.randint(0,2)]),
+            component_name="rfi_stations",
+            seed="once",
+        )
 
     if 'rfi_dtv' in id_rfis:
         sim.add(
@@ -110,7 +109,7 @@ def simulate(id_rfis):
         dtv_band=(0.174, 0.214),  
         dtv_channel_width=0.08,
         dtv_chance=0.025,
-        dtv_strength=80000.0,
+        dtv_strength=40000.0,
         dtv_std=20.0,
         component_name="rfi_dtv",
         seed="once",
@@ -120,7 +119,7 @@ def simulate(id_rfis):
         sim.add(
         "rfi_impulse",
         impulse_chance=0.005,  # A lot of sources
-        impulse_strength=80000.00,
+        impulse_strength=40000.00,
         component_name="rfi_impulse",
         seed="once",
         )
@@ -129,7 +128,7 @@ def simulate(id_rfis):
         sim.add(
         "rfi_scatter",
         scatter_chance=0.0008,  # A lot of sources
-        scatter_strength=80000.00,
+        scatter_strength=40000.00,
         scatter_std=200.0,
         component_name="rfi_scatter",
         seed="once",
@@ -170,11 +169,11 @@ def extract_data(sim,baselines,subset):
     """
     data,labels, masks  = [],[],[]
     _pairs = sim.get_antpairpols()
-    inds = np.array([i for i,p in enumerate(_pairs) if p[0]==p[1]])
-    #corr_pairs = [p for p in _pairs if p[0]!=p[1]]
+    auto_inds = np.array([i for i,p in enumerate(_pairs) if p[0]==p[1]])
+    corr_pairs = [p for p in _pairs if p[0]!=p[1]]
 
-    #corr_inds = np.random.choice(range(len(corr_pairs,)), baselines, replace=False)# sample random baselines given by "baselines"
-    #inds = np.concatenate([auto_inds, corr_inds],axis=-1)
+    corr_inds = np.random.choice(range(len(corr_pairs,)), baselines, replace=False)# sample random baselines given by "baselines"
+    inds = np.concatenate([auto_inds, corr_inds],axis=-1)
 
     for ind in inds:
         pairs = _pairs[ind]
@@ -227,27 +226,26 @@ def main():
         -------
         None
     """
-    n =25
+    n =40
     baselines=7
     rfis = ['rfi_stations', 'rfi_dtv', 'rfi_impulse', 'rfi_scatter']
-    #for L in tqdm([1,3]):# to simulate IID and OOD RFI
-    #    for subset in itertools.combinations(rfis,L): 
-    subset=rfis
-    data =  np.empty([n*baselines, 2**9, 2**9, 1], dtype='float16')
-    masks =  np.empty([2*n*baselines, 2**9, 2**9, 1], dtype='bool')
-    labels = np.empty([2*n*baselines],dtype=object)
-    st, en = 0, baselines
-    for i in range(n):
-        sim = simulate(subset)
-        _data, _masks, _labels = extract_data(sim, baselines,subset)
-        data[st:en,...], masks[st:en,...], labels[st:en]  = _data, _masks, _labels
-        st=en
-        en+=baselines
+    for L in tqdm([1,3]):# to simulate IID and OOD RFI
+        for subset in itertools.combinations(rfis,L): 
+            data =  np.empty([2*n*baselines, 2**9, 2**9, 1], dtype='float16')
+            masks =  np.empty([2*n*baselines, 2**9, 2**9, 1], dtype='bool')
+            labels = np.empty([2*n*baselines],dtype=object)
+            st, en = 0, 2*baselines
+            for i in range(n):
+                sim = simulate(subset)
+                _data, _masks, _labels = extract_data(sim, baselines,subset)
+                data[st:en,...], masks[st:en,...], labels[st:en]  = _data, _masks, _labels
+                st=en
+                en+=2*baselines
 
-    f_name = '/home/mmesarcik/data/HERA/HERA_{}_all.pkl'.format(datetime.datetime.now().strftime("%d-%m-%Y"),'-'.join(subset))
-    print('{} saved!'.format(f_name))
+            f_name = '/home/mmesarcik/data/HERA/HERA_{}_{}.pkl'.format(datetime.datetime.now().strftime("%d-%m-%Y"),'-'.join(subset))
+            print('{} saved!'.format(f_name))
 
-    pickle.dump([data,labels,masks],open(f_name, 'wb'), protocol=4)
+            pickle.dump([data,labels,masks],open(f_name, 'wb'), protocol=4)
 
 if __name__ == '__main__':
     main()
