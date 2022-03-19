@@ -82,7 +82,6 @@ def simulate(id_rfis):
     """
     sim.refresh()
     hera_sim.defaults.set("h1c")
-    sim.add("diffuse_foreground")
 
     sim.add(
     "diffuse_foreground",
@@ -94,6 +93,7 @@ def simulate(id_rfis):
     #########################################################################################
     #########################################################################################
 
+    #if np.random.random(1)[0] >0.5:
     if 'rfi_stations' in id_rfis:
         sim.add(
             "rfi_stations",
@@ -109,8 +109,8 @@ def simulate(id_rfis):
         dtv_band=(0.174, 0.214),  
         dtv_channel_width=0.08,
         dtv_chance=0.025,
-        dtv_strength=40000.0,
-        dtv_std=20.0,
+        dtv_strength=20000,
+        dtv_std=200.0,
         component_name="rfi_dtv",
         seed="once",
         )
@@ -119,7 +119,7 @@ def simulate(id_rfis):
         sim.add(
         "rfi_impulse",
         impulse_chance=0.005,  # A lot of sources
-        impulse_strength=40000.00,
+        impulse_strength=20000.00,
         component_name="rfi_impulse",
         seed="once",
         )
@@ -128,7 +128,7 @@ def simulate(id_rfis):
         sim.add(
         "rfi_scatter",
         scatter_chance=0.0008,  # A lot of sources
-        scatter_strength=40000.00,
+        scatter_strength=20000.00,
         scatter_std=200.0,
         component_name="rfi_scatter",
         seed="once",

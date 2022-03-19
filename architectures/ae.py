@@ -16,7 +16,7 @@ from inference import infer
 optimizer = tf.keras.optimizers.Adam(1e-4)
 
 def l2_loss(x,x_hat):
-    return bce(x,x_hat)
+    return mse(x,x_hat)
 
 @tf.function
 def train_step(model, x):
