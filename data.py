@@ -66,9 +66,13 @@ def load_hide(args):
         test_labels = np.empty(len(test_data), dtype='object')
         test_labels[np.any(test_masks, axis=(1,2,3))] = args.anomaly_class
         test_labels[np.invert(np.any(test_masks, axis=(1,2,3)))] = 'normal'
+        
+        (ae_train_data, 
+         ae_train_labels, 
+         _)  =  np.load('/home/mmesarcik/data/HERA/HERA_02-03-2022_free.pkl')
 
-        ae_train_data  = train_data[np.invert(np.any(train_masks, axis=(1,2,3)))]
-        ae_train_labels = train_labels[np.invert(np.any(train_masks, axis=(1,2,3)))]
+        #ae_train_data  = train_data[np.invert(np.any(train_masks, axis=(1,2,3)))]
+        #ae_train_labels = train_labels[np.invert(np.any(train_masks, axis=(1,2,3)))]
 
     ae_train_data = ae_train_data.astype(np.float16) 
     train_data = train_data.astype(np.float16) 
@@ -107,35 +111,20 @@ def load_hera(args):
         train_masks = train_masks[train_indx]
         train_labels = train_labels[train_indx]
 
-        #test_indx = np.random.permutation(len(test_data))[:args.limit]
-        #test_data = test_data[test_indx]
-        #test_masks = test_masks[test_indx]
-
-    if args.rfi is not None:
-        _mask = np.array([args.rfi not in label for label in train_labels])
-        train_data = train_data[_mask]
-        train_masks = train_masks[_mask]
-        train_labels= train_labels[_mask]
-
-        test_data, test_labels, test_masks, _ =  np.load('/home/mmesarcik/data/HERA/HERA_{}.pkl'.format(args.rfi), 
-                                                         allow_pickle=True)
-        test_masks = np.expand_dims(test_masks, axis=-1)
     test_masks_orig = copy.deepcopy(test_masks)
-#    if args.rfi_threshold is not None:
-#        test_masks = flag_data(test_data,args)
-#        train_masks = flag_data(train_data,args)
-#        test_masks = np.expand_dims(test_masks,axis=-1) 
-#        train_masks = np.expand_dims(train_masks,axis=-1) 
+    if args.rfi_threshold is not None:
+        test_masks = flag_data(test_data,args)
+        train_masks = flag_data(train_data,args)
+        test_masks = np.expand_dims(test_masks,axis=-1) 
+        train_masks = np.expand_dims(train_masks,axis=-1) 
 
-    test_data[test_data==0] = 0.001 # to make log normalisation happy
-    test_data = np.nan_to_num(np.log(test_data),nan=0)
-
-    train_data[train_data==0] = 0.001 # to make log normalisation happy
-    train_data = np.nan_to_num(np.log(train_data),nan=0)
-
+    test_data = np.clip(test_data, 0.7, 50)
+    test_data = np.nan_to_num(np.log10(test_data),nan=0)
     test_data =  process(test_data, per_image=False).astype(np.float16)
-    train_data = process(train_data, per_image=False).astype(np.float16)
 
+    train_data = np.clip(train_data, 0.7, 50)
+    train_data = np.nan_to_num(np.log10(train_data),nan=0)
+    train_data = process(train_data, per_image=False).astype(np.float16)
 
     if args.patches:
         p_size = (1,args.patch_x, args.patch_y, 1)
@@ -143,9 +132,11 @@ def load_hera(args):
         rate = (1,1,1,1)
 
         train_data = get_patches(train_data, None, p_size,s_size,rate,'VALID')
-        test_data = get_patches(test_data, None, p_size,s_size,rate,'VALID')
         train_masks = get_patches(train_masks, None, p_size,s_size,rate,'VALID').astype(np.bool)
+
+        test_data = get_patches(test_data, None, p_size,s_size,rate,'VALID')
         test_masks= get_patches(test_masks.astype('int') , None, p_size,s_size,rate,'VALID').astype(np.bool)
+
         test_masks_orig = get_patches(test_masks_orig.astype('int') , None, p_size,s_size,rate,'VALID').astype(np.bool)
 
         train_labels = np.empty(len(train_data), dtype='object')
@@ -156,10 +147,8 @@ def load_hera(args):
         test_labels[np.any(test_masks, axis=(1,2,3))] = args.anomaly_class
         test_labels[np.invert(np.any(test_masks, axis=(1,2,3)))] = 'normal'
 
-
         ae_train_data  = train_data[np.invert(np.any(train_masks, axis=(1,2,3)))]
         ae_train_labels = train_labels[np.invert(np.any(train_masks, axis=(1,2,3)))]
-
 
     ae_train_data = ae_train_data.astype(np.float16) 
     train_data = train_data.astype(np.float16) 
@@ -167,6 +156,7 @@ def load_hera(args):
 
     unet_train_dataset = tf.data.Dataset.from_tensor_slices(train_data).shuffle(BUFFER_SIZE).batch(BATCH_SIZE)
     ae_train_dataset = tf.data.Dataset.from_tensor_slices(ae_train_data).shuffle(BUFFER_SIZE).batch(BATCH_SIZE)
+
 
     return (unet_train_dataset,
             train_data, 

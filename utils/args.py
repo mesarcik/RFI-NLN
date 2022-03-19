@@ -7,6 +7,8 @@ from coolname import generate_slug as new_name
 """
 parser = argparse.ArgumentParser(description='Train generative anomaly detection models')
 
+parser.add_argument('-model',metavar='-m', type=str, default='AE',
+                    choices={'UNET','AE', 'VAE', 'DAE', 'DKNN','AE-res', 'AAE'}, help = 'Which model to train and evaluate')
 parser.add_argument('-limit',metavar='-l', type=str, default='None',
                     help = 'Limit on the number of samples in training data ')
 parser.add_argument('-anomaly_class',metavar='-a', type=str,  default=2,
@@ -26,7 +28,7 @@ parser.add_argument('-neighbors', metavar='-n', type=int, nargs='+', default=[2,
 parser.add_argument('-radius', metavar='-r', type=float, nargs='+', default=[0.1,0.5,1,2,5,10],
                     help = 'The radius of the unit circle for finding neighbours in frNN')
 parser.add_argument('-algorithm', metavar='-nn', type=str, choices={"frnn", "knn"}, 
-                    default='frnn', help = 'The algorithm for calculating neighbours')
+                    default='knn', help = 'The algorithm for calculating neighbours')
 parser.add_argument('-data', metavar='-d', type=str, default='MNIST',
                     help = 'The dataset for training and testing the model on')
 
@@ -57,7 +59,7 @@ parser.add_argument('-patch_stride_y', metavar='-psy', type=int,
                     help = 'y-dimension of strides of patches')
 parser.add_argument('-rfi', metavar='-rfi', type=str, default=None, 
                     help = 'HERA RFI label to exclude from training')
-parser.add_argument('-rfi_threshold', metavar='-rfi_threshold', type=float, default=None, 
+parser.add_argument('-rfi_threshold', metavar='-rfi_threshold', type=str, default=None, 
                     help = 'AOFlagger base threshold')
 
 args = parser.parse_args()

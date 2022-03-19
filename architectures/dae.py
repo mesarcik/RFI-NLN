@@ -18,16 +18,16 @@ discriminator_optimizer = tf.keras.optimizers.Adam(1e-5)
 generator_optimizer = tf.keras.optimizers.Adam(1e-5)
 
 def ae_loss(x,x_hat):
-    return bce(x,x_hat)
+    return mse(x,x_hat)
 
 def discriminator_loss(real_output, fake_output,loss_weight):
-    real_loss =  bce(tf.ones_like(real_output), real_output)
-    fake_loss =  bce(tf.zeros_like(fake_output), fake_output)
+    real_loss =  mse(tf.ones_like(real_output), real_output)
+    fake_loss =  mse(tf.zeros_like(fake_output), fake_output)
     total_loss = real_loss + fake_loss
     return loss_weight * total_loss
 
 def generator_loss(fake_output, loss_weight):
-    return  loss_weight * tf.reduce_mean(bce(tf.ones_like(fake_output), fake_output))
+    return  loss_weight * tf.reduce_mean(mse(tf.ones_like(fake_output), fake_output))
 
 @tf.function
 def train_step(ae,discriminator, x):

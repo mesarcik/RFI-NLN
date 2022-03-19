@@ -21,10 +21,17 @@ def ae_loss(x,x_hat,loss_weight):
     return loss_weight*bce(x,x_hat)
 
 def discriminator_loss(real_output, fake_output,loss_weight):
-    return loss_weight*bce(real_output, fake_output)
+    real_loss =  bce(tf.ones_like(real_output), real_output)
+    fake_loss =  bce(tf.zeros_like(fake_output), fake_output)
+    total_loss = tf.reduce_mean(real_loss + fake_loss)
+    return loss_weight * total_loss
 
 def encoder_loss(z,z_hat, loss_weight):
-    return loss_weight*bce(z,z_hat)
+    return loss_weight*tf.reduce_mean(bce(z,z_hat))
+
+def generator_loss(fake_output, loss_weight):
+    return  loss_weight * tf.reduce_mean(bce(tf.ones_like(fake_output), 
+                                             fake_output))
 
 @tf.function
 def train_step(ae,encoder,discriminator,images):
@@ -38,11 +45,13 @@ def train_step(ae,encoder,discriminator,images):
       real_output,c0 = discriminator(images, training=True)
       fake_output,c1 = discriminator(x_hat, training=True)
 
-      auto_loss = ae_loss(images,x_hat,1)
-      disc_loss = discriminator_loss(real_output, fake_output,50)
+      auto_loss = ae_loss(images,x_hat,50)
+      disc_loss = discriminator_loss(c0, c1,1)
+      gen_loss = generator_loss(c1,1)
       enc_loss = encoder_loss(z,z_hat,1)
+      total_loss = auto_loss+gen_loss 
 
-    gradients_of_ae= ae_tape.gradient(auto_loss, ae.trainable_variables)
+    gradients_of_ae= ae_tape.gradient(total_loss, ae.trainable_variables)
     gradients_of_discriminator = disc_tape.gradient(disc_loss, discriminator.trainable_variables)
     gradients_of_encoder= en_tape.gradient(enc_loss, encoder.trainable_variables)
 

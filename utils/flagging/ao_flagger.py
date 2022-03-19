@@ -20,7 +20,7 @@ def flag_data(data, args):
 
     aoflagger = aof.AOFlagger()
     if args.data == 'HERA':
-        strategy = aoflagger.load_strategy_file('utils/flagging/stratergies/bighorns-{}.lua'.format(int(args.rfi_threshold)))
+        strategy = aoflagger.load_strategy_file('utils/flagging/stratergies/hera_{}.lua'.format(args.rfi_threshold))
     elif args.data == 'HIDE':
         strategy = aoflagger.load_strategy_file('utils/flagging/stratergies/wsrt-default-{}.lua'.format(int(args.rfi_threshold)))
 

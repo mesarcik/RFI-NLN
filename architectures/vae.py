@@ -66,13 +66,13 @@ def train(vae,train_dataset,test_images,test_labels,args):
     return vae 
 
 
-def main(train_dataset,train_images,train_labels,test_images, test_labels, test_masks, args):
+def main(train_dataset,train_images,train_labels,test_images,test_labels, test_masks,test_masks_orig,args):
     if args.data == 'MVTEC':
         vae = VAE_MVTEC(args)
     else:
         vae = VAE(args)
     vae = train(vae,train_dataset,test_images,test_labels,args)
-    end_routine(train_images, test_images, test_labels, test_masks, [vae], 'VAE', args)
+    end_routine(train_images, test_images, test_labels, test_masks, test_masks_orig, [vae], 'VAE', args)
 
 if __name__  == '__main__':
     main()
