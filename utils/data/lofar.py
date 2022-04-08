@@ -38,6 +38,8 @@ def get_lofar_data(directory, args, num_baselines=400):
 
     train_data, train_masks = _random_crop(data, masks, (sizes[args.data], sizes[args.data]))
     test_data, test_masks = np.load('/data/mmesarcik/LOFAR/uncompressed/LOFAR_test.npy')
+    test_data = test_data.astype('float32')
+    test_masks= test_masks.astype('bool')
 
     train_data = np.concatenate([train_data, np.roll(train_data,
                                                      args.patch_x//2, 
