@@ -245,10 +245,10 @@ def evaluate_performance(model,
 def get_metrics(test_masks_recon,test_masks_orig_recon, error_recon):
 
     ## AUROC AOFlagger  
-    #fpr,tpr, thr = roc_curve(test_masks_recon.flatten()>0, 
-    #                         error_recon.flatten())
-    #ao_auroc = auc(fpr, tpr)
-
+#    fpr,tpr, thr = roc_curve(test_masks_recon.flatten()>0, 
+#                             error_recon.flatten())
+#    ao_auroc = auc(fpr, tpr)
+#
     # AUROC True 
     fpr,tpr, thr = roc_curve(test_masks_orig_recon.flatten()>0, 
                              error_recon.flatten())
@@ -256,11 +256,11 @@ def get_metrics(test_masks_recon,test_masks_orig_recon, error_recon):
 
     # IOU AOFlagger  
 
-    #ao_iou = iou_score(error_recon, 
-    #                   test_masks_recon, 
-    #                   fpr, 
-    #                   tpr, 
-    #                   thr)
+#    ao_iou = iou_score(error_recon, 
+#                       test_masks_recon, 
+#                       fpr, 
+#                       tpr, 
+#                       thr)
     # IOU True
     true_iou = iou_score(error_recon, 
                          test_masks_orig_recon, 
@@ -269,10 +269,10 @@ def get_metrics(test_masks_recon,test_masks_orig_recon, error_recon):
                          thr)
 
     # AUPRC AOFlagger  
-    #precision, recall, thresholds = precision_recall_curve(test_masks_recon.flatten()>0, 
-    #                                                       error_recon.flatten())
-
-    #ao_auprc = auc(recall, precision)
+#    precision, recall, thresholds = precision_recall_curve(test_masks_recon.flatten()>0, 
+#                                                           error_recon.flatten())
+#
+#    ao_auprc = auc(recall, precision)
 
     # AUPRC True 
     precision, recall, thresholds = precision_recall_curve(test_masks_orig_recon.flatten()>0, 

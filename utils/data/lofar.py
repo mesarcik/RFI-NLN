@@ -2,6 +2,7 @@ import os
 import pickle
 import numpy as np
 from tqdm import tqdm 
+from h5py import File
 from glob import glob
 import tensorflow as tf
 from utils.data.defaults import sizes 
@@ -31,52 +32,22 @@ def get_lofar_data(directory, args, num_baselines=400):
         num_baselines (int): number of baselines to sample 
     """
 
-    # read each npy file and select, crop it to 512x512 
-    # if the training dataset has already been created then return that
+    with File('/data/mmesarcik/LOFAR/uncompressed/LOFAR_dataset.h5', 'r') as f:
+        data = f['visibilities'][:].astype('float32')
+        masks = f['aoflags'][:].astype('bool')
 
-    if os.path.exists(os.path.join(directory,'joined_dataset.pickle')):
-        print(os.path.join(directory,'joined_dataset.pickle') + ' Loading')
-        with open('{}/joined_dataset.pickle'.format(directory),'rb') as f:
-            return pickle.load(f)
+    train_data, train_masks = _random_crop(data, masks, (sizes[args.data], sizes[args.data]))
+    test_data, test_masks = np.load('/data/mmesarcik/LOFAR/uncompressed/LOFAR_test.npy')
 
-    else:
-        print('Creating joined LOFAR dataset')
+    train_data = np.concatenate([train_data, np.roll(train_data,
+                                                     args.patch_x//2, 
+                                                     axis =2)], axis=0)# this is less artihmetically complex then making stride half
 
-    files = glob('{}/*.npy'.format(directory))
-    data = np.empty([len(files)*num_baselines, 
-                     sizes[args.data], 
-                     sizes[args.data], 1], 
-                     dtype=np.float32)
-    masks = np.empty([len(files)*num_baselines, 
-                     sizes[args.data], 
-                     sizes[args.data], 1], 
-                     dtype=np.bool)
-
-    strt, fnnsh = 0, num_baselines
-    for f in tqdm(glob('{}/*.npy'.format(directory))):
-        temp_data, temp_flags = np.load(f, allow_pickle=True)
-        inds = np.random.choice(range(len(temp_data)), num_baselines, replace=False)
-        temp_data, temp_flags  = temp_data[inds], temp_flags[inds]
-
-        temp_data, temp_flags = _random_crop(np.absolute(temp_data[...,0:1]).astype('float32'),
-                                             temp_flags[...,0:1].astype('int'),
-                                             (sizes[args.data], 
-                                             sizes[args.data]))
-        data[strt:fnnsh,...] = temp_data
-        masks[strt:fnnsh,...] = temp_flags.astype('bool')
-
-        strt=fnnsh
-        fnnsh = fnnsh + num_baselines
-
-    (train_data, test_data,
-     train_masks, test_masks) = train_test_split(data,
-                                                 masks,
-                                                 test_size=0.25,
-                                                 random_state=42)
-
-    pickle.dump((train_data, train_masks, test_data, test_masks), open('{}/joined_dataset.pickle'.format(directory), 'wb'), protocol=4)
-
+    train_masks = np.concatenate([train_masks, np.roll(train_masks,
+                                                       args.patch_x//2, 
+                                                       axis =2)], axis=0)
     return train_data, train_masks, test_data, test_masks
+
 
 
         
