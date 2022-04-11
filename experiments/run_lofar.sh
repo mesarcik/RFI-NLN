@@ -10,9 +10,9 @@ atype=MISO
 ld=128
 patch=32
 
-for sigma in 1 2 5 10 50
+for sigma in 5 7 10 15 20 50
 do
-		for model in AE 
+		for model in AE DAE_disc UNET 
 		do
 				python -u main.py -model $model\
 								  -limit $limit \
