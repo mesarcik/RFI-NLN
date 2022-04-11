@@ -12,7 +12,7 @@ class Encoder(tf.keras.layers.Layer):
         self.latent_dim  = args.latent_dim
 
         for n in range(n_layers):
-            self.conv.append(layers.Conv2D(filters = n_filters, 
+            self.conv.append(layers.Conv2D(filters = (n_layers-n)*n_filters, 
                                        kernel_size = (2,2), 
                                        strides = (2,2),
                                        padding = 'same',
@@ -61,9 +61,9 @@ class Decoder(tf.keras.layers.Layer):
                                        n_filters))
 
         self.conv, self.pool, self.batchnorm = [],[],[]
-        for _ in range(n_layers-1):
+        for n in range(n_layers-1):
 
-            self.conv.append(layers.Conv2DTranspose(filters = n_filters, 
+            self.conv.append(layers.Conv2DTranspose(filters = (n+1)*n_filters, 
                                                kernel_size = (2,2), 
                                                strides = (2,2),
                                                padding = 'same',
