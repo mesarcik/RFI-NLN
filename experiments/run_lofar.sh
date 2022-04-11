@@ -1,22 +1,24 @@
 #!/bin/sh
 echo "Logging for run_lofar.sh at time: $(date)." >> log.log
 
-limit=1000
+limit=500
 epochs=100
 percentage=0.0
 seed=$(openssl rand -hex 3)
 d=$(date +'%m-%d-%Y-%I-%M_')
 atype=MISO
 ld=128
+patch=32
 
-for patch in 64 32 16
+for sigma in 1 2 5 10 50
 do
-		for model in UNET AE DAE VAE 
+		for model in AE 
 		do
 				python -u main.py -model $model\
 								  -limit $limit \
 								  -anomaly_class rfi\
 								  -rfi None\
+								  -rfi_threshold $sigma\
 								  -anomaly_type $atype\
 								  -percentage_anomaly $percentage \
 								  -epochs $epochs \
@@ -31,10 +33,9 @@ do
 								  -patch_stride_y $patch \
 								  -data LOFAR\
 								  -data_path /data/mmesarcik/LOFAR/uncompressed/\
-								  -neighbors 5 20\
-								  -alpha 0.1 0.5 0.9\
+								  -neighbors 20\
+								  -alpha 0.25\
 								  -algorithm knn\
 								  -seed $d$seed | tee -a lofar.log 
-								  #-seed 03-30-2022-06-26_7f4f1c | tee -a lofar.log 
 		done
 done 
