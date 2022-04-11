@@ -217,34 +217,9 @@ def load_lofar(args):
         test_labels = np.empty(len(test_data), dtype='object')
         test_labels[np.any(test_masks, axis=(1,2,3))] = args.anomaly_class
         test_labels[np.invert(np.any(test_masks, axis=(1,2,3)))] = 'normal'
-        #if len(train_data) > 1000000:
-        #    ind = np.random.choice(len(train_data), 
-        #                           1000000, 
-        #                           replace=False)
-        #    train_data = train_data[ind]
-        #    train_labels = train_labels[ind]
-        #    train_masks = train_masks[ind]
-
-        #
-        #if len(test_data) > 1000000:
-        #    ind= np.random.choice(len(test_data), 
-        #                           1000000, 
-        #                           replace=False)
-        #    test_data = test_data[ind]
-        #    test_masks = test_masks[ind]
-        #    test_labels = test_labels[ind]
-
 
         ae_train_data  = train_data[np.invert(np.any(train_masks, axis=(1,2,3)))]
         ae_train_labels = train_labels[np.invert(np.any(train_masks, axis=(1,2,3)))]
-
-        #test_data  =  test_data[np.invert(np.any(test_masks, axis=(1,2,3)))]
-        #test_labels = test_labels[np.invert(np.any(test_masks, axis=(1,2,3)))]
-        #test_masks = test_masks[np.invert(np.any(test_masks, axis=(1,2,3)))]
-
-    ae_train_data = ae_train_data.astype(np.float16) 
-    train_data = train_data.astype(np.float16) 
-    test_data = test_data.astype(np.float16) 
 
     unet_train_dataset = tf.data.Dataset.from_tensor_slices(train_data).shuffle(BUFFER_SIZE,seed=42).batch(BATCH_SIZE)
     ae_train_dataset = tf.data.Dataset.from_tensor_slices(ae_train_data).shuffle(BUFFER_SIZE,seed=42).batch(BATCH_SIZE)

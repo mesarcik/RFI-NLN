@@ -35,5 +35,5 @@ def flag_data(data, args):
         flag_mask = flags.get_buffer()
         mask[indx,...] = flag_mask
     
-    return mask
+    return mask.astype('bool')
 
