@@ -1,18 +1,18 @@
 #!/bin/sh
 echo "Logging for run_lofar.sh at time: $(date)." >> log.log
 
-limit=500
-epochs=100
+limit=1000
+epochs=200
 percentage=0.0
 seed=$(openssl rand -hex 3)
 d=$(date +'%m-%d-%Y-%I-%M_')
 atype=MISO
-ld=128
-patch=32
+ld=1024
+patch=64
 
-for sigma in 5 7 10 15 20 50
+for sigma in 0.95 1 
 do
-		for model in AE DAE_disc UNET 
+		for model in AE UNET DAE 
 		do
 				python -u main.py -model $model\
 								  -limit $limit \
@@ -33,9 +33,10 @@ do
 								  -patch_stride_y $patch \
 								  -data LOFAR\
 								  -data_path /data/mmesarcik/LOFAR/uncompressed/\
-								  -neighbors 20\
-								  -alpha 0.25\
+								  -neighbors 5 20\
+								  -alpha 0.1\
 								  -algorithm knn\
-								  -seed $d$seed | tee -a lofar.log 
+								  -seed 04-12-2022-09-33_a124b6 | tee -a lofar.log 
+								  #-seed $d$seed | tee -a lofar.log 
 		done
 done 

@@ -179,17 +179,6 @@ def load_lofar(args):
 
     train_data, train_masks, test_data, test_masks = get_lofar_data('/data/mmesarcik/LOFAR/uncompressed/',args)
 
-    RFI_free_test_data = test_data[np.invert(test_masks)].flatten()
-    _min = RFI_free_test_data.mean() - RFI_free_test_data.std()*int(args.rfi_threshold)
-    _max= RFI_free_test_data.mean() + RFI_free_test_data.std()*int(args.rfi_threshold)
-
-    test_data = np.clip(test_data, _min, _max)
-    test_data = np.log(test_data)
-    test_data = process(test_data, per_image=False)
-    
-    train_data = np.clip(train_data, _min, _max)
-    train_data = np.log(train_data)
-    train_data = process(train_data, per_image=False)
 
     if args.limit is not None:
         train_indx = np.random.permutation(len(train_data))[:args.limit]
@@ -200,9 +189,23 @@ def load_lofar(args):
         #test_data   = test_data  [test_indx]
         #test_masks  = test_masks [test_indx]
 
-    #if args.rfi_threshold is not None:
-    #    train_masks = flag_data(train_data,args)
-    #    train_masks = np.expand_dims(train_masks,axis=-1) 
+    if args.rfi_threshold is not None:
+        train_masks = flag_data(train_data,args)
+        train_masks = np.expand_dims(train_masks,axis=-1) 
+
+
+    #RFI_free_test_data = test_data[np.invert(test_masks)].flatten()
+    #_min = 1e6# RFI_free_test_data.mean() 
+    #_max= RFI_free_test_data.mean() + RFI_free_test_data.std()*int(100)
+
+    test_data = np.clip(test_data, 1e6, 100e6)
+    test_data = np.log(test_data)
+    test_data = process(test_data, per_image=False)
+    
+    train_data = np.clip(train_data, 1e6, 10e6)
+    train_data = np.log(train_data)
+    train_data = process(train_data, per_image=False)
+
 
     if args.patches:
         p_size = (1,args.patch_x, args.patch_y, 1)
