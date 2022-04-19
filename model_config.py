@@ -9,4 +9,4 @@ mae=tf.keras.losses.MeanAbsoluteError()
 
 ### AE Parameters for CIFAR, MNIST, FMNIST 
 n_filters =32 
-n_layers =4
+n_layers =2

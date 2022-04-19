@@ -208,7 +208,7 @@ def evaluate_performance(model,
         combined_ao_auprcs.append(combined_ao_auprc)
         combined_ao_ious.append(combined_ao_iou)
 
-    fig, axs = plt.subplots(10,7, figsize=(10,7))
+    fig, axs = plt.subplots(10,7, figsize=(10,8))
     axs[0,0].set_title('Inp',fontsize=5)
     axs[0,1].set_title('Mask',fontsize=5)
     axs[0,2].set_title('Recon {}'.format(ae_ao_auroc),fontsize=5)
@@ -219,13 +219,13 @@ def evaluate_performance(model,
 
     for i in range(10):
         r = np.random.randint(len(test_data_recon))
-        axs[i,0].imshow(test_data_recon[r,...,0].astype(np.float32), interpolation='nearest', aspect='auto')
-        axs[i,1].imshow(test_masks_recon[r,...,0].astype(np.float32), interpolation='nearest', aspect='auto')
-        axs[i,2].imshow(error_recon[r,...,0].astype(np.float32), interpolation='nearest', aspect='auto')
-        axs[i,3].imshow(nln_error_recon[r,...,0].astype(np.float32), interpolation='nearest', aspect='auto')
-        axs[i,4].imshow(dists_recon[r,...,0].astype(np.float32), interpolation='nearest', aspect='auto')
-        axs[i,5].imshow(combined_recon[r,...,0].astype(np.float32), interpolation='nearest', aspect='auto')
-        axs[i,6].imshow(x_hat_recon[r,...,0].astype(np.float32), interpolation='nearest', aspect='auto')
+        axs[i,0].imshow(test_data_recon[r,...,0].astype(np.float32),  vmin=0, vmax=1,interpolation='nearest', aspect='auto')
+        axs[i,1].imshow(test_masks_recon[r,...,0].astype(np.float32), vmin=0, vmax=1,interpolation='nearest', aspect='auto')
+        axs[i,2].imshow(error_recon[r,...,0].astype(np.float32),      vmin=0, vmax=1,interpolation='nearest', aspect='auto')
+        axs[i,3].imshow(nln_error_recon[r,...,0].astype(np.float32),  vmin=0, vmax=1,interpolation='nearest', aspect='auto')
+        axs[i,4].imshow(dists_recon[r,...,0].astype(np.float32),      interpolation='nearest', aspect='auto')
+        axs[i,5].imshow(combined_recon[r,...,0].astype(np.float32),   vmin=0, vmax=1,interpolation='nearest', aspect='auto')
+        axs[i,6].imshow(x_hat_recon[r,...,0].astype(np.float32),      vmin=0, vmax=1,interpolation='nearest', aspect='auto')
     plt.savefig('outputs/{}/{}/{}/neighbours_{}.png'.format(model_type,
                                                    args.anomaly_class,
                                                    args.model_name,
