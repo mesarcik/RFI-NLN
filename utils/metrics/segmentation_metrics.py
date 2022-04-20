@@ -195,7 +195,8 @@ def evaluate_performance(model,
     combined_true_aurocs, combined_true_auprcs, combined_true_ious  = [], [],[]
     combined_ao_aurocs, combined_ao_auprcs, combined_ao_ious  = [], [],[]
     for alpha in args.alphas:
-        combined_recon = alpha*normalise(nln_error_recon) + (1-alpha)*normalise(dists_recon)
+        combined_recon = normalise(nln_error_recon*np.array([d > 3*np.median(d) for d in dists_recon]))
+        combined_recon = np.nan_to_num(combined_recon)
         (combined_ao_auroc, combined_true_auroc, 
          combined_ao_auprc, combined_true_auprc,      
          combined_ao_iou,   combined_true_iou) = get_metrics(test_masks_recon, 
@@ -329,9 +330,10 @@ def normalise(x):
         -------
         y (np.array): Normalised array
     """
-    y = (x- np.min(x))/(np.max(x) - np.min(x))
-
-    return y
+    y = []
+    for _x in x:
+        y.append((_x- np.min(_x))/(np.max(_x) - np.min(_x)))
+    return np.array(y)
 
 def get_dists(neighbours_dist, args):
     """
