@@ -1,5 +1,5 @@
 # Learning to detect radio frequency intereference in radio astronomy without seeing it 
-A repository containing the implementation of the paper entitled "Learning to detect radio frequency intereference in radio astronomy without seeing it "
+A repository containing the implementation of the paper entitled "Learning to detect radio frequency interference in radio astronomy without seeing it "
 
 **NOTE mention AOFLAGGER**
 
