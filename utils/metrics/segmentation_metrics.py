@@ -195,7 +195,9 @@ def evaluate_performance(model,
     combined_true_aurocs, combined_true_auprcs, combined_true_ious  = [], [],[]
     combined_ao_aurocs, combined_ao_auprcs, combined_ao_ious  = [], [],[]
     for alpha in args.alphas:
-        combined_recon = normalise(nln_error_recon*np.array([d > 3*np.median(d) for d in dists_recon]))
+       # combined_recon = normalise(nln_error_recon*np.array([d > 3*np.median(d) for d in dists_recon]))
+        combined_recon = np.clip(nln_error_recon, nln_error_recon.mean() + nln_error_recon.std()*5,1.0)*np.array([d > np.percentile(d,60) for d in dists_recon])
+        combined_recon = np.nan_to_num(combined_recon)
         combined_recon = np.nan_to_num(combined_recon)
         (combined_ao_auroc, combined_true_auroc, 
          combined_ao_auprc, combined_true_auprc,      
