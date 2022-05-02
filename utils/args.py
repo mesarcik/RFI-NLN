@@ -8,7 +8,7 @@ from coolname import generate_slug as new_name
 parser = argparse.ArgumentParser(description='Train generative anomaly detection models')
 
 parser.add_argument('-model',metavar='-m', type=str, default='AE',
-                    choices={'UNET','AE', 'VAE', 'DAE', 'DKNN','AE-res', 'AAE'}, help = 'Which model to train and evaluate')
+                    choices={'UNET','AE', 'VAE', 'DAE', 'DKNN','AE-res', 'AAE','RNET'}, help = 'Which model to train and evaluate')
 parser.add_argument('-limit',metavar='-l', type=str, default='None',
                     help = 'Limit on the number of samples in training data ')
 parser.add_argument('-anomaly_class',metavar='-a', type=str,  default=2,

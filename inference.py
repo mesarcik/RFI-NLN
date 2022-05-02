@@ -90,7 +90,7 @@ def get_error(model_type,
     elif model_type == 'GANomaly':
         error = z- z_hat
 
-    elif model_type == 'UNET':
+    elif model_type == 'UNET' or model_type=='RNET':
         error = x_hat
 
     #if ab:
