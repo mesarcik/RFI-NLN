@@ -19,7 +19,7 @@ class Encoder(tf.keras.layers.Layer):
                                        activation='relu'))
             #self.pool.append(layers.MaxPooling2D(pool_size=(2,2),padding='same'))
 
-            self.batchnorm.append(layers.BatchNormalization()())
+            self.batchnorm.append(layers.BatchNormalization())
 
         #output shape = 2,2
         self.flatten = layers.Flatten()
@@ -70,7 +70,7 @@ class Decoder(tf.keras.layers.Layer):
                                                activation='relu'))
 
             self.pool.append(layers.UpSampling2D(size=(2,2)))
-            self.batchnorm.append(layers.BatchNormalization()())
+            self.batchnorm.append(layers.BatchNormalization())
 
         self.conv_output = layers.Conv2DTranspose(filters = args.input_shape[-1], 
                                            kernel_size = (2,2), 
@@ -101,50 +101,6 @@ class Autoencoder(tf.keras.Model):
         x_hat = self.decoder(z)
         return x_hat 
 
-class MultiEncoder(tf.keras.Model):
-    def __init__(self,args):
-        super(MultiEncoder, self).__init__()
-        self.input_layer = layers.InputLayer(input_shape=args.input_shape)
-        self.latent_dim  = args.latent_dim
-        self.nneighbours = args.neighbors[0]
-        self.input_convs  = []
-        for n in range(self.nneighbours+1):
-            self.input_convs.append([layers.Conv2D(n_filters, (4, 4), strides=2, activation=layers.LeakyReLU(alpha=0.2), padding='same'), 
-                                     layers.Conv2D(n_filters, (4, 4), strides=2, activation=layers.LeakyReLU(alpha=0.2), padding='same')])
-
-        self.concat = []
-
-        self.conv = []
-        self.conv.append(layers.Conv2D(n_filters, (4, 4), strides=2, activation=layers.LeakyReLU(alpha=0.2), padding='same'))
-        self.conv.append(layers.Conv2D(n_filters, (3, 3), strides=1, activation=layers.LeakyReLU(alpha=0.2), padding='same'))
-        self.conv.append(layers.Conv2D(n_filters*2, (4, 4), strides=2, activation=layers.LeakyReLU(alpha=0.2), padding='same'))
-        self.conv.append(layers.Conv2D(n_filters*2, (3, 3), strides=1, activation=layers.LeakyReLU(alpha=0.2), padding='same'))
-        self.conv.append(layers.Conv2D(n_filters*4, (4, 4), strides=2, activation=layers.LeakyReLU(alpha=0.2), padding='same'))
-        self.conv.append(layers.Conv2D(n_filters*2, (3, 3), strides=1, activation=layers.LeakyReLU(alpha=0.2), padding='same'))
-        self.conv.append(layers.Conv2D(n_filters, (3, 3), strides=1, activation=layers.LeakyReLU(alpha=0.2), padding='same'))
-        self.conv.append(layers.Conv2D(self.latent_dim, (8, 8), strides=1, activation='linear', padding='valid'))
-
-        self.reshape = layers.Reshape((self.latent_dim,))
-
-    def call(self, x, nln):
-        """
-            x (np.array): train batch
-            nln (tuple/list): a list of inputs to MultiEncoder in the following order [ NLN_0,...,NLN_n]
-        """
-        outputs = []
-        x = self.input_convs[0][0](x)
-        outputs.append(self.input_convs[0][1](x))
-
-        for n, inp in enumerate(nln):
-            x = self.input_convs[n+1][0](inp)
-            outputs.append(self.input_convs[n+1][1](x))
-        x = layers.concatenate(outputs)
-
-        for layer in self.conv:
-            x = layer(x)
-        x = self.reshape(x)
-
-        return x
 class Discriminator_x(tf.keras.Model):
     def __init__(self,args):
         super(Discriminator_x, self).__init__()
@@ -223,7 +179,7 @@ def Conv2D_block(input_tensor, n_filters, kernel_size = 3, batchnorm = True, str
                       strides=stride,
                       padding = 'same')(input_tensor)
     if batchnorm:
-        x = layers.BatchNormalization()()(x)
+        x = layers.BatchNormalization()(x)
     x = layers.Activation('relu')(x)
     
     return x
