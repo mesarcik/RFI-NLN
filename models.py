@@ -8,7 +8,7 @@ class Encoder(tf.keras.layers.Layer):
     def __init__(self,args):
         super(Encoder, self).__init__()
         self.input_layer = layers.InputLayer(input_shape=args.input_shape)
-        self.conv, self.pool, self.batchnorm = [],[],[]
+        self.conv, self.pool, self.batchnorm, self.dropout = [],[],[],[]
         self.latent_dim  = args.latent_dim
 
         for n in range(n_layers):
@@ -20,6 +20,7 @@ class Encoder(tf.keras.layers.Layer):
             #self.pool.append(layers.MaxPooling2D(pool_size=(2,2),padding='same'))
 
             self.batchnorm.append(layers.BatchNormalization())
+            self.dropout.append(layers.Dropout(0.05))
 
         #output shape = 2,2
         self.flatten = layers.Flatten()
@@ -37,6 +38,7 @@ class Encoder(tf.keras.layers.Layer):
             #if layer !=n_layers-1:
             #    x = self.pool[layer](x)
             x = self.batchnorm[layer](x)
+            x = self.dropout[layer](x)
         x = self.flatten(x)
 
         if vae: 
@@ -60,7 +62,7 @@ class Decoder(tf.keras.layers.Layer):
                                        args.input_shape[1]//2**(n_layers-1),
                                        n_filters))
 
-        self.conv, self.pool, self.batchnorm = [],[],[]
+        self.conv, self.pool, self.batchnorm, self.dropout = [],[],[],[]
         for n in range(n_layers-1):
 
             self.conv.append(layers.Conv2DTranspose(filters = (n+1)*n_filters, 
@@ -71,9 +73,10 @@ class Decoder(tf.keras.layers.Layer):
 
             self.pool.append(layers.UpSampling2D(size=(2,2)))
             self.batchnorm.append(layers.BatchNormalization())
+            self.dropout.append(layers.Dropout(0.05))
 
         self.conv_output = layers.Conv2DTranspose(filters = args.input_shape[-1], 
-                                           kernel_size = (2,2), 
+                                           kernel_size = (3,3), 
                                            padding = 'same',
                                            activation='sigmoid')
 
@@ -86,6 +89,7 @@ class Decoder(tf.keras.layers.Layer):
             x = self.conv[layer](x)
             #x = self.pool[layer](x)
             x = self.batchnorm[layer](x)
+            x = self.dropout[layer](x)
         
         x = self.conv_output(x)
         return  x

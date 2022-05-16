@@ -1,4 +1,5 @@
 import tensorflow as tf
+from tqdm import tqdm
 import numpy as np
 from sklearn.metrics import (roc_curve,
                              auc, 
@@ -198,7 +199,8 @@ def evaluate_performance(model,
     combined_ao_aurocs, combined_ao_auprcs, combined_ao_f1s= [], [],[]
     for alpha in args.alphas:
        # combined_recon = normalise(nln_error_recon*np.array([d > 3*np.median(d) for d in dists_recon]))
-        combined_recon = np.clip(nln_error_recon,nln_error_recon.mean(),1.0)*np.array([d > np.percentile(d,10) for d in dists_recon])
+        #nln_error_recon = np.array([(_x- np.min(_x))/(np.max(_x) - np.min(_x)) for _x in nln_error_recon])
+        combined_recon =  np.clip(nln_error_recon,nln_error_recon.mean()+nln_error_recon.std()*5,1.0)*np.array([d > np.percentile(d,60) for d in dists_recon])#
         combined_recon = np.nan_to_num(combined_recon)
         (combined_ao_auroc, combined_true_auroc, 
          combined_ao_auprc, combined_true_auprc,      
@@ -382,8 +384,14 @@ def _f1_score(error, test_masks,precision,recall,thr):
 
     """
 
+    #score = 0
+    #for t in tqdm(np.linspace(thr.min(), thr.max(), 50)):
+    #    thresholded = np.mean(error,axis=-1) >t
+    #    fscore = f1_score(test_masks.flatten()>0, thresholded.flatten())
+    #    if fscore > score: score = fscore
+    #return score
     idx = np.argmax(precision + recall) 
-    thresholded = np.mean(error,axis=-1) >=thr[idx]
+    thresholded = np.mean(error,axis=-1) >thr[idx]
     fscore = f1_score(test_masks.flatten()>0, thresholded.flatten())
     return fscore
 

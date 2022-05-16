@@ -10,7 +10,7 @@ function execute(input)
   -- Generic settings
   --
 
-  local base_threshold =0.5  -- lower means more sensitive detection
+  local base_threshold =0.75  -- lower means more sensitive detection
   -- How to flag complex values, options are: phase, amplitude, real, imaginary, complex
   local representation = "amplitude"
   local iteration_count = 3  -- how many iterations to perform?

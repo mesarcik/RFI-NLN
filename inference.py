@@ -30,7 +30,7 @@ def infer(model, data, args, arch):
             output = np.empty(data.shape,dtype=np.float16)
         strt, fnnsh = 0, BATCH_SIZE
         for batch in data_tensor:
-            output[strt:fnnsh,...] = model(batch).numpy() 
+            output[strt:fnnsh,...] = model(batch,training=False).numpy() 
             strt = fnnsh
             fnnsh +=BATCH_SIZE
     
@@ -38,7 +38,7 @@ def infer(model, data, args, arch):
         output = np.empty([len(data), args.latent_dim], dtype=np.float16)
         strt, fnnsh = 0, BATCH_SIZE
         for batch in data_tensor:
-            output[strt:fnnsh,...] = model(batch)[0].numpy() # for disc
+            output[strt:fnnsh,...] = model(batch, training=False)[0].numpy() # for disc
             strt = fnnsh
             fnnsh +=BATCH_SIZE
 
