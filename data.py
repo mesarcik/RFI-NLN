@@ -197,11 +197,11 @@ def load_lofar(args):
     #_min = 1e6# RFI_free_test_data.mean() 
     #_max= RFI_free_test_data.mean() + RFI_free_test_data.std()*int(100)
 
-    test_data = np.clip(test_data,10e5, 100e6)
+    test_data = np.clip(test_data,args.clip, 100e6)
     test_data = np.log(test_data)
     test_data = process(test_data, per_image=False)
     
-    train_data = np.clip(train_data, 10e5, 100e6)
+    train_data = np.clip(train_data, args.clip, 100e6)
     train_data = np.log(train_data)
     train_data = process(train_data, per_image=False)
 

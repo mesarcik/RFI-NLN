@@ -68,7 +68,7 @@ def end_routine(train_data,
                          combined_ao_f1=     combined_ao_f1s[i],
                          combined_true_f1=   combined_true_f1s[i])
 
-            if model_type == 'UNET' or model_type == 'DKNN':
+            if model_type == 'UNET' or model_type == 'DKNN' or model_type == 'RNET' or model_type =='RFI_NET':
                 return 
 
 

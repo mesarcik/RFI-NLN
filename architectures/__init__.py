@@ -10,4 +10,5 @@ from .ganomaly import main as train_ganomaly
 
 from .unet import main as train_unet
 from .rnet import main as train_rnet
+from .rfi_net import main as train_rfi_net
 from .resnet import main as train_resnet

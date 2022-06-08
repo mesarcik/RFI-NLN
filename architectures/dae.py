@@ -13,7 +13,7 @@ from model_config import *
 
 from .helper import end_routine
 
-ae_optimizer = tf.keras.optimizers.Adam()
+ae_optimizer = tf.keras.optimizers.Adam(1e-4)
 discriminator_optimizer = tf.keras.optimizers.Adam(1e-5)
 generator_optimizer = tf.keras.optimizers.Adam(1e-5)
 
