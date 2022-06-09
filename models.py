@@ -298,33 +298,6 @@ def RNET(args):
 
 def RFINET_downblock(input_tensor, n_filters, kernel_size = 3, batchnorm = True, stride=(1,1)):
     # first layer
-    x = layers.Conv2D(filters = n_filters, 
-                      kernel_size = (kernel_size, kernel_size),\
-                      kernel_initializer = 'he_normal', 
-                      strides=stride,
-                      padding = 'same')(input_tensor)
-    x = layers.BatchNormalization()(x)
-    x = layers.Activation('relu')(x)
-
-    x = layers.Conv2D(filters = n_filters, 
-                      kernel_size = (kernel_size, kernel_size),\
-                      kernel_initializer = 'he_normal', 
-                      strides=stride,
-                      padding = 'same')(x)
-    x = layers.BatchNormalization()(x)
-    
-    x = layers.Conv2D(filters = n_filters, 
-                      kernel_size = (kernel_size, kernel_size),\
-                      kernel_initializer = 'he_normal', 
-                      strides=stride,
-                      padding = 'same')(x)
-    x = layers.BatchNormalization()(x)
-    x = layers.Activation('relu')(x)
-    
-    return x
-
-def RFINET_downblock(input_tensor, n_filters, kernel_size = 3, batchnorm = True, stride=(1,1)):
-    # first layer
     x0 = layers.Conv2D(filters = n_filters, 
                       kernel_size = (kernel_size, kernel_size),\
                       kernel_initializer = 'he_normal', 
@@ -411,46 +384,23 @@ def RFI_NET(args, n_filters = 32, dropout = 0.05, batchnorm = True):
                       strides=1,
                       padding = 'same')(input_data)
 
-    c1 = RFINET_downblock(c0, 
-                      n_filters * 1, 
-                      kernel_size = 3, 
-                      batchnorm = batchnorm,
-                      stride=(1,1))
-
+    c1 = RFINET_downblock(c0,n_filters * 1, kernel_size = 3, batchnorm = batchnorm, stride=(1,1))
     p1 = layers.MaxPooling2D((2, 2))(c1)
     p1 = layers.Dropout(dropout)(p1)
 
-    c2 = RFINET_downblock(p1, 
-                      n_filters * 2, 
-                      kernel_size = 3, 
-                      stride=(1,1),
-                      batchnorm = batchnorm)
+    c2 = RFINET_downblock(p1, n_filters * 2, kernel_size = 3, stride=(1,1), batchnorm = batchnorm)
     p2 = layers.MaxPooling2D((2, 2))(c2)
     p2 = layers.Dropout(dropout)(p2)
     
-    c3 = RFINET_downblock(p2, 
-                      n_filters * 4, 
-                      kernel_size = 3, 
-                      stride=(1,1),
-                      batchnorm = batchnorm)
-
+    c3 = RFINET_downblock(p2, n_filters * 4, kernel_size = 3, stride=(1,1), batchnorm = batchnorm)
     p3 = layers.MaxPooling2D((2, 2))(c3)
     p3 = layers.Dropout(dropout)(p3)
     
-    c4 = RFINET_downblock(p3, 
-                      n_filters * 8, 
-                      kernel_size = 3, 
-                      stride=(1,1),
-                      batchnorm = batchnorm)
+    c4 = RFINET_downblock(p3, n_filters * 8, kernel_size = 3, stride=(1,1),batchnorm = batchnorm)
     p4 = layers.MaxPooling2D((2, 2))(c4)
     p4 = layers.Dropout(dropout)(p4)
 
-    c5 = RFINET_downblock(p4, 
-                      n_filters * 16, 
-                      kernel_size = 3, 
-                      stride=(1,1),
-                      batchnorm = batchnorm)
-
+    c5 = RFINET_downblock(p4, n_filters * 16, kernel_size = 3, stride=(1,1), batchnorm = batchnorm)
     p5 = layers.MaxPooling2D((2, 2))(c5)
     p5 = layers.Dropout(dropout)(p5)
     
@@ -469,7 +419,6 @@ def RFI_NET(args, n_filters = 32, dropout = 0.05, batchnorm = True):
     
     u9 = layers.Conv2DTranspose(n_filters * 1, (3, 3), strides = (2, 2), padding = 'same')(c8)
     u9 = layers.concatenate([u9, c1])
-    #u9 = layers.UpSampling2D((2,2))(u9)
     c9 = RFINET_upblock(u9, n_filters * 1, kernel_size = 3, batchnorm = batchnorm)
     
     outputs = layers.Conv2D(1, (1, 1), activation='sigmoid')(c9)
