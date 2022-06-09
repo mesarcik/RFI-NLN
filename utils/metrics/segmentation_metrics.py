@@ -200,7 +200,8 @@ def evaluate_performance(model,
     for alpha in args.alphas:
        # combined_recon = normalise(nln_error_recon*np.array([d > 3*np.median(d) for d in dists_recon]))
         #nln_error_recon = np.array([(_x- np.min(_x))/(np.max(_x) - np.min(_x)) for _x in nln_error_recon])
-        combined_recon =  np.clip(nln_error_recon,nln_error_recon.mean()+nln_error_recon.std()*5,1.0)*np.array([d > np.percentile(d,60) for d in dists_recon])#
+        #combined_recon =  np.clip(nln_error_recon,nln_error_recon.mean()+nln_error_recon.std()*5,1.0)*np.array([d > np.percentile(d,60) for d in dists_recon])#
+        combined_recon =  np.clip(nln_error_recon,nln_error_recon.mean()+nln_error_recon.std()*5,1.0)*np.array([d > np.percentile(d,66) for d in dists_recon])#
         combined_recon = np.nan_to_num(combined_recon)
         (combined_ao_auroc, combined_true_auroc, 
          combined_ao_auprc, combined_true_auprc,      
@@ -288,11 +289,14 @@ def get_metrics(test_masks_recon,test_masks_orig_recon, error_recon):
                                                            error_recon.flatten())
     true_auprc = auc(recall, precision)
 
-    true_f1 = _f1_score(error_recon, 
-                        test_masks_orig_recon, 
-                         precision, 
-                         recall, 
-                         thresholds)
+    f1_scores = 2*recall*precision/(recall+precision)
+    true_f1 = np.max(f1_scores)
+
+    #true_f1 = _f1_score(error_recon, 
+    #                    test_masks_orig_recon, 
+    #                     precision, 
+    #                     recall, 
+    #                     thresholds)
 
 
     #return ao_auroc, true_auroc, ao_auprc, true_auprc, ao_iou, true_iou
