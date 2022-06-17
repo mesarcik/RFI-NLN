@@ -41,4 +41,4 @@ def get_hera_data(args):
     train_labels = np.concatenate([train_labels,
                                    train_labels],
                                    axis=0)
-    return (train_data, test_data, train_labels, test_labels, train_masks, test_masks)
+    return (train_data.astype('float32'), test_data.astype('float32'), train_labels, test_labels, train_masks, test_masks)

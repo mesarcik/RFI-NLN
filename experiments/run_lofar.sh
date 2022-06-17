@@ -7,14 +7,13 @@ percentage=0.0
 seed=$(openssl rand -hex 3)
 d=$(date +'%m-%d-%Y-%I-%M_')
 atype=MISO
-ld=8
+ld=32
 clip=1.75e6
-patch=128
+patch=32
 
-for model in RFI_NET 
+for model in DAE UNET RNET RFI_NET
 do
-
-		for repeat in 1 2 3 #1 2 3 5 10 20 50 75 100
+		for repeat in 3
 		do
 		python -u main.py -model $model\
 						  -limit $limit \
@@ -35,10 +34,10 @@ do
 						  -patch_stride_y $patch \
 						  -data LOFAR\
 						  -data_path /data/mmesarcik/LOFAR/uncompressed/\
-						  -neighbors 5 10 20 50\
+						  -neighbors 1 5 10 20 50 100\
 						  -alpha 0.02\
 						  -algorithm knn\
-						  -seed 05-28-2022-01-32_96c554 | tee -a lofar.log 
-						  #-seed $d$seed | tee -a lofar.log 
+						  -seed $d$seed | tee -a lofar.log 
+						  #-seed 06-09-2022-02-31_ff1cc4 | tee -a lofar.log 
 		done 
 done
