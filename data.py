@@ -119,12 +119,14 @@ def load_hera(args):
         train_masks = np.expand_dims(train_masks,axis=-1) 
 
     _max = np.mean(test_data[np.invert(test_masks)])+4*np.std(test_data[np.invert(test_masks)])
-    test_data = np.clip(test_data, 0, _max)
+    _min =  np.absolute(np.mean(test_data[np.invert(test_masks)]) - np.std(test_data[np.invert(test_masks)]))
+    test_data = np.clip(test_data, _min, _max)
     test_data = np.log(test_data)
     test_data =  process(test_data, per_image=False)#.astype(np.float16)
 
     _max = np.mean(train_data[np.invert(train_masks)])+4*np.std(train_data[np.invert(train_masks)])
-    train_data = np.clip(train_data, 0, _max)
+    _min = np.absolute(np.mean(train_data[np.invert(train_masks)])-np.std(train_data[np.invert(train_masks)]))
+    train_data = np.clip(train_data, _min, _max)
     train_data = np.log(train_data)
     train_data = process(train_data, per_image=False)#.astype(np.float16)
 
