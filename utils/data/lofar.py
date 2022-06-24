@@ -23,20 +23,19 @@ def _random_crop(image,mask,size):
         fnnsh+=BATCH_SIZE
     return output_images, output_masks
 
-def get_lofar_data(directory, args, num_baselines=400):
+def get_lofar_data(args, num_baselines=400):
     """"
         Walks through LOFAR dataset and returns sampled and cropped data 
         
-        directory (str): Directory where LOFAR dataset resides
         args (Namespace): args from utils.cmd_args 
         num_baselines (int): number of baselines to sample 
     """
-    if os.path.exists(os.path.join(directory,'joined_dataset.pickle')):
-        print(os.path.join(directory,'joined_dataset.pickle') + ' Loading')
-        with open('{}/joined_dataset.pickle'.format(directory),'rb') as f:
+    if os.path.exists(os.path.join(args.data_path,'joined_dataset.pickle')):
+        print(os.path.join(args.data_path,'joined_dataset.pickle') + ' Loading')
+        with open('{}/joined_dataset.pickle'.format(args.data_path),'rb') as f:
             train_data, train_masks, _, _ = pickle.load(f)
 
-    test_data, test_masks = np.load(os.path.join(directory,'LOFAR_test.npy'))
+    test_data, test_masks = np.load(os.path.join(args.data_path,'LOFAR_test.npy'))
     test_data = test_data.astype('float32')
     test_masks= test_masks.astype('bool')
 
