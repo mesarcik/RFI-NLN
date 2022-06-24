@@ -22,7 +22,9 @@ def flag_data(data, args):
     if args.data == 'HERA':
         strategy = aoflagger.load_strategy_file('utils/flagging/stratergies/hera_{}.lua'.format(args.rfi_threshold))
     elif args.data == 'HIDE':
-        strategy = aoflagger.load_strategy_file('utils/flagging/stratergies/wsrt-default-{}.lua'.format(int(args.rfi_threshold)))
+        strategy = aoflagger.load_strategy_file('utils/flagging/stratergies/wsrt-default-{}.lua'.format(args.rfi_threshold))
+    elif args.data == 'LOFAR':
+        strategy = aoflagger.load_strategy_file('utils/flagging/stratergies/lofar-default-{}.lua'.format(args.rfi_threshold))
 
     # LOAD data into AOFlagger structure
     for indx in tqdm(range(len(data))):
@@ -33,5 +35,5 @@ def flag_data(data, args):
         flag_mask = flags.get_buffer()
         mask[indx,...] = flag_mask
     
-    return mask
+    return mask.astype('bool')
 

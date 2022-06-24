@@ -74,7 +74,7 @@ def get_patches(x,
         rate (list) subsampling rate after getting patches 
     """
     scaling_factor =(x.shape[1]//p_size[1])**2
-    output = np.empty([x.shape[0]*scaling_factor,p_size[1], p_size[2], x.shape[-1]]) 
+    output = np.empty([x.shape[0]*scaling_factor,p_size[1], p_size[2], x.shape[-1]], dtype='float32') 
 
     strt, fnnsh = 0, BATCH_SIZE
     output_start, output_fnnsh = 0, BATCH_SIZE*scaling_factor

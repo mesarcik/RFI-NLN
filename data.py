@@ -118,13 +118,17 @@ def load_hera(args):
         test_masks = np.expand_dims(test_masks,axis=-1) 
         train_masks = np.expand_dims(train_masks,axis=-1) 
 
-    test_data = np.clip(test_data, 0.7, 50)
-    test_data = np.nan_to_num(np.log10(test_data),nan=0)
-    test_data =  process(test_data, per_image=False).astype(np.float16)
+    _max = np.mean(test_data[np.invert(test_masks)])+4*np.std(test_data[np.invert(test_masks)])
+    _min =  np.absolute(np.mean(test_data[np.invert(test_masks)]) - np.std(test_data[np.invert(test_masks)]))
+    test_data = np.clip(test_data, _min, _max)
+    test_data = np.log(test_data)
+    test_data =  process(test_data, per_image=False)#.astype(np.float16)
 
-    train_data = np.clip(train_data, 0.7, 50)
-    train_data = np.nan_to_num(np.log10(train_data),nan=0)
-    train_data = process(train_data, per_image=False).astype(np.float16)
+    _max = np.mean(train_data[np.invert(train_masks)])+4*np.std(train_data[np.invert(train_masks)])
+    _min = np.absolute(np.mean(train_data[np.invert(train_masks)])-np.std(train_data[np.invert(train_masks)]))
+    train_data = np.clip(train_data, _min, _max)
+    train_data = np.log(train_data)
+    train_data = process(train_data, per_image=False)#.astype(np.float16)
 
     if args.patches:
         p_size = (1,args.patch_x, args.patch_y, 1)
@@ -150,9 +154,9 @@ def load_hera(args):
         ae_train_data  = train_data[np.invert(np.any(train_masks, axis=(1,2,3)))]
         ae_train_labels = train_labels[np.invert(np.any(train_masks, axis=(1,2,3)))]
 
-    ae_train_data = ae_train_data.astype(np.float16) 
-    train_data = train_data.astype(np.float16) 
-    test_data = test_data.astype(np.float16) 
+    #ae_train_data = ae_train_data.astype(np.float16) 
+    #train_data = train_data.astype(np.float16) 
+    #test_data = test_data.astype(np.float16) 
 
     unet_train_dataset = tf.data.Dataset.from_tensor_slices(train_data).shuffle(BUFFER_SIZE).batch(BATCH_SIZE)
     ae_train_dataset = tf.data.Dataset.from_tensor_slices(ae_train_data).shuffle(BUFFER_SIZE).batch(BATCH_SIZE)
@@ -177,15 +181,8 @@ def load_lofar(args):
 
     """
 
-    train_data, train_masks, test_data, test_masks = get_lofar_data( args)
+    train_data, train_masks, test_data, test_masks = get_lofar_data('/data/mmesarcik/LOFAR/uncompressed/',args)
 
-    test_data[test_data==0] = 0.001 # to make log normalisation happy
-    test_data = np.nan_to_num(np.log(test_data),nan=0)
-    test_data = process(test_data, per_image=False)
-
-    train_data[train_data==0] = 0.001 # to make log normalisation happy
-    train_data = np.nan_to_num(np.log(train_data),nan=0)
-    train_data = process(train_data, per_image=False)
 
     if args.limit is not None:
         train_indx = np.random.permutation(len(train_data))[:args.limit]
@@ -195,6 +192,22 @@ def load_lofar(args):
         train_masks = train_masks[train_indx]
         #test_data   = test_data  [test_indx]
         #test_masks  = test_masks [test_indx]
+
+    if args.rfi_threshold is not None:
+        train_masks = flag_data(train_data,args)
+        train_masks = np.expand_dims(train_masks,axis=-1) 
+
+    #RFI_free_test_data = test_data[np.invert(test_masks)].flatten()
+    #_min = 1e6# RFI_free_test_data.mean() 
+    #_max= RFI_free_test_data.mean() + RFI_free_test_data.std()*int(100)
+
+    test_data = np.clip(test_data,args.clip, 100e6)
+    test_data = np.log(test_data)
+    test_data = process(test_data, per_image=False)
+    
+    train_data = np.clip(train_data, args.clip, 100e6)
+    train_data = np.log(train_data)
+    train_data = process(train_data, per_image=False)
 
     if args.patches:
         p_size = (1,args.patch_x, args.patch_y, 1)
@@ -213,34 +226,9 @@ def load_lofar(args):
         test_labels = np.empty(len(test_data), dtype='object')
         test_labels[np.any(test_masks, axis=(1,2,3))] = args.anomaly_class
         test_labels[np.invert(np.any(test_masks, axis=(1,2,3)))] = 'normal'
-        if len(train_data) > 1000000:
-            ind = np.random.choice(len(train_data), 
-                                   1000000, 
-                                   replace=False)
-            train_data = train_data[ind]
-            train_labels = train_labels[ind]
-            train_masks = train_masks[ind]
-
-        
-        if len(test_data) > 1000000:
-            ind= np.random.choice(len(test_data), 
-                                   1000000, 
-                                   replace=False)
-            test_data = test_data[ind]
-            test_masks = test_masks[ind]
-            test_labels = test_labels[ind]
-
 
         ae_train_data  = train_data[np.invert(np.any(train_masks, axis=(1,2,3)))]
         ae_train_labels = train_labels[np.invert(np.any(train_masks, axis=(1,2,3)))]
-
-        #test_data  =  test_data[np.invert(np.any(test_masks, axis=(1,2,3)))]
-        #test_labels = test_labels[np.invert(np.any(test_masks, axis=(1,2,3)))]
-        #test_masks = test_masks[np.invert(np.any(test_masks, axis=(1,2,3)))]
-
-    ae_train_data = ae_train_data.astype(np.float16) 
-    train_data = train_data.astype(np.float16) 
-    test_data = test_data.astype(np.float16) 
 
     unet_train_dataset = tf.data.Dataset.from_tensor_slices(train_data).shuffle(BUFFER_SIZE,seed=42).batch(BATCH_SIZE)
     ae_train_dataset = tf.data.Dataset.from_tensor_slices(ae_train_data).shuffle(BUFFER_SIZE,seed=42).batch(BATCH_SIZE)

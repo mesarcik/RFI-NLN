@@ -13,7 +13,7 @@ from model_config import *
 
 from .helper import end_routine
 
-ae_optimizer = tf.keras.optimizers.Adam()
+ae_optimizer = tf.keras.optimizers.Adam(1e-4)
 discriminator_optimizer = tf.keras.optimizers.Adam(1e-5)
 generator_optimizer = tf.keras.optimizers.Adam(1e-5)
 
@@ -30,7 +30,7 @@ def generator_loss(fake_output, loss_weight):
     return  loss_weight * tf.reduce_mean(mse(tf.ones_like(fake_output), fake_output))
 
 @tf.function
-def train_step(ae,discriminator, x):
+def train_step(ae,discriminator, x,):# xn):
     """Executes one training step and returns the loss.
 
     This function computes the loss and gradients, and uses the latter to
@@ -68,9 +68,14 @@ def train(ae,discriminator, train_dataset,test_images,test_labels,args):
     for epoch in range(args.epochs):
         start = time.time()
         for image_batch in train_dataset:
+            #_mean, _std = tf.math.reduce_mean(image_batch).numpy(), tf.math.reduce_std(image_batch).numpy()
+            #noise = tf.random.normal(image_batch.shape,mean=_mean/3,stddev=_std/3, dtype=tf.dtypes.float16)
+
+
             auto_loss,disc_loss,gen_loss  =  train_step(ae, 
                                                         discriminator, 
-                                                        image_batch)
+                                                        image_batch,)
+                                                        #image_batch+noise)
 
         generate_and_save_images(ae,
                                  epoch + 1,

@@ -1,7 +1,9 @@
 import tensorflow as tf
+from tqdm import tqdm
 import numpy as np
 from sklearn.metrics import (roc_curve,
                              auc, 
+                             f1_score,
                              accuracy_score, 
                              average_precision_score, 
                              jaccard_score,
@@ -54,13 +56,14 @@ def evaluate_performance(model,
     test_masks_recon = patches.reconstruct(test_masks, args)
     test_masks_orig_recon = patches.reconstruct(test_masks_orig, args)
 
-    if model_type =='UNET':
+    if model_type =='UNET' or model_type =='RNET' or model_type =='RFI_NET':
         x_hat = infer(model[0], test_images, args, 'AE')
         x_hat_recon = patches.reconstruct(x_hat, args)
+        x_hat_recon[x_hat_recon==np.inf] = np.finfo(x_hat_recon.dtype).max
 
         (unet_ao_auroc, unet_true_auroc, 
          unet_ao_auprc, unet_true_auprc,      
-         unet_ao_iou, unet_true_iou) = get_metrics(test_masks_recon, 
+         unet_ao_f1, unet_true_f1) = get_metrics(test_masks_recon, 
                                                    test_masks_orig_recon, 
                                                    x_hat_recon)
 
@@ -80,7 +83,7 @@ def evaluate_performance(model,
                                                        args.model_name), dpi=300)
         return (unet_ao_auroc, unet_true_auroc, 
          unet_ao_auprc, unet_true_auprc,      
-         unet_ao_iou, unet_true_iou,
+         unet_ao_f1, unet_true_f1,
          -1, -1, 
          -1, -1,      
          -1, -1,
@@ -102,7 +105,7 @@ def evaluate_performance(model,
 
         (dknn_ao_auroc, dknn_true_auroc, 
          dknn_ao_auprc, dknn_true_auprc,      
-         dknn_ao_iou,   dknn_true_iou) = get_metrics(test_masks_recon, 
+         dknn_ao_f1,   dknn_true_f1) = get_metrics(test_masks_recon, 
                                                      test_masks_orig_recon, 
                                                      dists_recon)
 
@@ -122,7 +125,7 @@ def evaluate_performance(model,
 
         return (dknn_ao_auroc, dknn_true_auroc, 
                 dknn_ao_auprc, dknn_true_auprc,      
-                dknn_ao_iou, dknn_true_iou,
+                dknn_ao_f1, dknn_true_f1,
                 -1, -1, 
                 -1, -1,      
                 -1, -1,
@@ -138,6 +141,7 @@ def evaluate_performance(model,
 
     x_hat_train  = infer(model[0], train_images, args, 'AE')
     x_hat = infer(model[0], test_images, args, 'AE')
+    x_hat_recon = patches.reconstruct(x_hat, args)
 
     error = get_error('AE', test_images, x_hat,mean=False)
 
@@ -145,7 +149,7 @@ def evaluate_performance(model,
 
     (ae_ao_auroc, ae_true_auroc, 
      ae_ao_auprc, ae_true_auprc,      
-     ae_ao_iou,   ae_true_iou) = get_metrics(test_masks_recon, 
+     ae_ao_f1,   ae_true_f1) = get_metrics(test_masks_recon, 
                                              test_masks_orig_recon, 
                                              error_recon)
 
@@ -180,49 +184,56 @@ def evaluate_performance(model,
 
     (nln_ao_auroc, nln_true_auroc, 
      nln_ao_auprc, nln_true_auprc,      
-     nln_ao_iou,   nln_true_iou) = get_metrics(test_masks_recon, 
+     nln_ao_f1,   nln_true_f1) = get_metrics(test_masks_recon, 
                                                test_masks_orig_recon, 
                                                nln_error_recon)
 
 
     (dists_ao_auroc, dists_true_auroc, 
      dists_ao_auprc, dists_true_auprc,      
-     dists_ao_iou,   dists_true_iou) = get_metrics(test_masks_recon, 
+     dists_ao_f1,   dists_true_f1) = get_metrics(test_masks_recon, 
                                                    test_masks_orig_recon, 
                                                    dists_recon)
 
-    combined_true_aurocs, combined_true_auprcs, combined_true_ious  = [], [],[]
-    combined_ao_aurocs, combined_ao_auprcs, combined_ao_ious  = [], [],[]
+    combined_true_aurocs, combined_true_auprcs, combined_true_f1s= [], [],[]
+    combined_ao_aurocs, combined_ao_auprcs, combined_ao_f1s= [], [],[]
     for alpha in args.alphas:
-        combined_recon = alpha*normalise(nln_error_recon) + (1-alpha)*normalise(dists_recon)
+        if args.data == 'LOFAR':
+            combined_recon =  np.clip(nln_error_recon,nln_error_recon.mean()+nln_error_recon.std()*5,1.0)*np.array([d > np.percentile(d,66) for d in dists_recon])#
+        elif args.data == 'HERA':
+            combined_recon =  nln_error_recon*np.array([d > np.percentile(d,10) for d in dists_recon])#
+
+        combined_recon = np.nan_to_num(combined_recon)
         (combined_ao_auroc, combined_true_auroc, 
          combined_ao_auprc, combined_true_auprc,      
-         combined_ao_iou,   combined_true_iou) = get_metrics(test_masks_recon, 
+         combined_ao_f1,   combined_true_f1) = get_metrics(test_masks_recon, 
                                                        test_masks_orig_recon, 
                                                        combined_recon)
         combined_true_aurocs.append(combined_true_auroc)
         combined_true_auprcs.append(combined_true_auprc)
-        combined_true_ious.append(combined_true_iou)
+        combined_true_f1s.append(combined_true_f1)
         combined_ao_aurocs.append(combined_ao_auroc)
         combined_ao_auprcs.append(combined_ao_auprc)
-        combined_ao_ious.append(combined_ao_iou)
+        combined_ao_f1s.append(combined_ao_f1)
 
-    fig, axs = plt.subplots(10,6, figsize=(10,7))
+    fig, axs = plt.subplots(10,7, figsize=(10,8))
     axs[0,0].set_title('Inp',fontsize=5)
     axs[0,1].set_title('Mask',fontsize=5)
     axs[0,2].set_title('Recon {}'.format(ae_ao_auroc),fontsize=5)
     axs[0,3].set_title('NLN {} {}'.format(nln_ao_auroc, neighbour),fontsize=5)
     axs[0,4].set_title('Dist {} {}'.format(dists_ao_auroc, neighbour),fontsize=5)
     axs[0,5].set_title('Combined {} {}'.format(combined_ao_aurocs[0], neighbour),fontsize=5)
+    axs[0,6].set_title('Recon {} {}'.format(combined_ao_aurocs[0], neighbour),fontsize=5)
 
     for i in range(10):
         r = np.random.randint(len(test_data_recon))
-        axs[i,0].imshow(test_data_recon[r,...,0].astype(np.float32), interpolation='nearest', aspect='auto')
-        axs[i,1].imshow(test_masks_recon[r,...,0].astype(np.float32), interpolation='nearest', aspect='auto')
-        axs[i,2].imshow(error_recon[r,...,0].astype(np.float32), interpolation='nearest', aspect='auto')
-        axs[i,3].imshow(nln_error_recon[r,...,0].astype(np.float32), interpolation='nearest', aspect='auto')
-        axs[i,4].imshow(dists_recon[r,...,0].astype(np.float32), interpolation='nearest', aspect='auto')
-        axs[i,5].imshow(combined_recon[r,...,0].astype(np.float32), interpolation='nearest', aspect='auto')
+        axs[i,0].imshow(test_data_recon[r,...,0].astype(np.float32),  vmin=0, vmax=1,interpolation='nearest', aspect='auto')
+        axs[i,1].imshow(test_masks_recon[r,...,0].astype(np.float32), vmin=0, vmax=1,interpolation='nearest', aspect='auto')
+        axs[i,2].imshow(error_recon[r,...,0].astype(np.float32),      vmin=0, vmax=1,interpolation='nearest', aspect='auto')
+        axs[i,3].imshow(nln_error_recon[r,...,0].astype(np.float32),  vmin=0, vmax=1,interpolation='nearest', aspect='auto')
+        axs[i,4].imshow(dists_recon[r,...,0].astype(np.float32),      interpolation='nearest', aspect='auto')
+        axs[i,5].imshow(combined_recon[r,...,0].astype(np.float32),   vmin=0, vmax=1,interpolation='nearest', aspect='auto')
+        axs[i,6].imshow(x_hat_recon[r,...,0].astype(np.float32),      vmin=0, vmax=1,interpolation='nearest', aspect='auto')
     plt.savefig('outputs/{}/{}/{}/neighbours_{}.png'.format(model_type,
                                                    args.anomaly_class,
                                                    args.model_name,
@@ -231,24 +242,24 @@ def evaluate_performance(model,
 
     return (ae_ao_auroc,  ae_true_auroc, 
             ae_ao_auprc,  ae_true_auprc,      
-            ae_ao_iou,    ae_true_iou,
+            ae_ao_f1,    ae_true_f1,
             nln_ao_auroc, nln_true_auroc, 
             nln_ao_auprc, nln_true_auprc,      
-            nln_ao_iou,   nln_true_iou,
+            nln_ao_f1,   nln_true_f1,
             dists_ao_auroc, dists_true_auroc, 
             dists_ao_auprc, dists_true_auprc,      
-            dists_ao_iou,   dists_true_iou,
+            dists_ao_f1,   dists_true_f1,
             combined_ao_aurocs, combined_true_aurocs, 
             combined_ao_auprcs, combined_true_auprcs,      
-            combined_ao_ious,   combined_true_ious)
+            combined_ao_f1s,   combined_true_f1s)
 
 def get_metrics(test_masks_recon,test_masks_orig_recon, error_recon):
 
     ## AUROC AOFlagger  
-    #fpr,tpr, thr = roc_curve(test_masks_recon.flatten()>0, 
-    #                         error_recon.flatten())
-    #ao_auroc = auc(fpr, tpr)
-
+#    fpr,tpr, thr = roc_curve(test_masks_recon.flatten()>0, 
+#                             error_recon.flatten())
+#    ao_auroc = auc(fpr, tpr)
+#
     # AUROC True 
     fpr,tpr, thr = roc_curve(test_masks_orig_recon.flatten()>0, 
                              error_recon.flatten())
@@ -256,32 +267,41 @@ def get_metrics(test_masks_recon,test_masks_orig_recon, error_recon):
 
     # IOU AOFlagger  
 
-    #ao_iou = iou_score(error_recon, 
-    #                   test_masks_recon, 
-    #                   fpr, 
-    #                   tpr, 
-    #                   thr)
+#    ao_iou = iou_score(error_recon, 
+#                       test_masks_recon, 
+#                       fpr, 
+#                       tpr, 
+#                       thr)
     # IOU True
-    true_iou = iou_score(error_recon, 
-                         test_masks_orig_recon, 
-                         fpr, 
-                         tpr, 
-                         thr)
+    #true_iou = iou_score(error_recon, 
+    #                     test_masks_orig_recon, 
+    #                     fpr, 
+    #                     tpr, 
+    #                     thr)
 
     # AUPRC AOFlagger  
-    #precision, recall, thresholds = precision_recall_curve(test_masks_recon.flatten()>0, 
-    #                                                       error_recon.flatten())
-
-    #ao_auprc = auc(recall, precision)
+#    precision, recall, thresholds = precision_recall_curve(test_masks_recon.flatten()>0, 
+#                                                           error_recon.flatten())
+#
+#    ao_auprc = auc(recall, precision)
 
     # AUPRC True 
     precision, recall, thresholds = precision_recall_curve(test_masks_orig_recon.flatten()>0, 
                                                            error_recon.flatten())
     true_auprc = auc(recall, precision)
 
+    f1_scores = 2*recall*precision/(recall+precision)
+    true_f1 = np.max(f1_scores)
+
+    #true_f1 = _f1_score(error_recon, 
+    #                    test_masks_orig_recon, 
+    #                     precision, 
+    #                     recall, 
+    #                     thresholds)
+
 
     #return ao_auroc, true_auroc, ao_auprc, true_auprc, ao_iou, true_iou
-    return -1, true_auroc, -1, true_auprc, -1, true_iou
+    return -1, true_auroc, -1, true_auprc, -1, true_f1
     
 def get_threshold(fpr,tpr,thr,flag,test_labels,error,anomaly_class):
     """
@@ -326,9 +346,10 @@ def normalise(x):
         -------
         y (np.array): Normalised array
     """
-    y = (x- np.min(x))/(np.max(x) - np.min(x))
-
-    return y
+    y = []
+    for _x in x:
+        y.append((_x- np.min(_x))/(np.max(_x) - np.min(_x)))
+    return np.array(y)
 
 def get_dists(neighbours_dist, args):
     """
@@ -353,6 +374,32 @@ def get_dists(neighbours_dist, args):
     else:
         return dists 
 
+def _f1_score(error, test_masks,precision,recall,thr):
+    """
+        Get F1 score 
+
+        Parameters
+        ----------
+        error (np.array): input-output
+        test_masks (np.array): ground truth mask 
+
+        Returns
+        -------
+        max_f1 (float32): maximum f1 score for a number of thresholds
+
+    """
+
+    #score = 0
+    #for t in tqdm(np.linspace(thr.min(), thr.max(), 50)):
+    #    thresholded = np.mean(error,axis=-1) >t
+    #    fscore = f1_score(test_masks.flatten()>0, thresholded.flatten())
+    #    if fscore > score: score = fscore
+    #return score
+    idx = np.argmax(precision + recall) 
+    thresholded = np.mean(error,axis=-1) >thr[idx]
+    fscore = f1_score(test_masks.flatten()>0, thresholded.flatten())
+    return fscore
+
 def iou_score(error, test_masks,fpr,tpr,thr):
     """
         Get jaccard index or IOU score
@@ -372,10 +419,4 @@ def iou_score(error, test_masks,fpr,tpr,thr):
     thresholded = np.mean(error,axis=-1) >=thr[idx]
     iou = jaccard_score(test_masks.flatten()>0, thresholded.flatten())
     return iou
-    #iou = []
-    #for threshold in np.linspace(np.min(thr), np.max(thr),10):
-    #    thresholded =np.mean(error,axis=-1) >=threshold
-    #    iou.append(jaccard_score(test_masks.flatten()>0, thresholded.flatten()))
-
-    #return max(iou) 
 

@@ -26,6 +26,12 @@ def main():
     if args.args.model == 'UNET':
         train_unet(unet_train_dataset, train_data, train_labels, train_masks, test_data, test_labels, test_masks, test_masks_orig, args.args)
 
+    if args.args.model == 'RNET':
+        train_rnet(unet_train_dataset, train_data, train_labels, train_masks, test_data, test_labels, test_masks, test_masks_orig, args.args)
+
+    if args.args.model == 'RFI_NET':
+        train_rfi_net(unet_train_dataset, train_data, train_labels, train_masks, test_data, test_labels, test_masks, test_masks_orig, args.args)
+
     elif args.args.model == 'DKNN':
         train_resnet(ae_train_dataset, ae_train_data, ae_train_labels, test_data, test_labels, test_masks, test_masks_orig, args.args)
 
