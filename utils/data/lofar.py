@@ -1,12 +1,8 @@
 import os
+import errno
 import pickle
 import numpy as np
-from tqdm import tqdm 
-from h5py import File
-from glob import glob
 import tensorflow as tf
-from utils.data.defaults import sizes 
-from sklearn.model_selection import train_test_split
 from model_config import BATCH_SIZE
 
 def _random_crop(image,mask,size):
@@ -30,18 +26,10 @@ def get_lofar_data(args, num_baselines=400):
         args (Namespace): args from utils.cmd_args 
         num_baselines (int): number of baselines to sample 
     """
-    if os.path.exists(os.path.join(args.data_path,'joined_dataset.pickle')):
-        print(os.path.join(args.data_path,'joined_dataset.pickle') + ' Loading')
-        with open('{}/joined_dataset.pickle'.format(args.data_path),'rb') as f:
-            train_data, train_masks, _, _ = pickle.load(f)
-
-    test_data, test_masks = np.load(os.path.join(args.data_path,'LOFAR_test.npy'))
-    test_data = test_data.astype('float32')
-    test_masks= test_masks.astype('bool')
-
-    return train_data, train_masks, test_data, test_masks
-
-
-
-        
-        
+    if os.path.exists(os.path.join(args.data_path,'LOFAR_Full_RFI_dataset.pkl')):
+        print(os.path.join(args.data_path,'LOFAR_Full_RFI_dataset.pkl') + ' Loading')
+        with open('{}/LOFAR_Full_RFI_dataset.pkl'.format(args.data_path),'rb') as f:
+            return  pickle.load(f)
+    else:
+        raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), 
+                                os.path.join(args.data_path,'joined_dataset.pickle'))
