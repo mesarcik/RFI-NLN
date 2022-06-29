@@ -255,35 +255,10 @@ def evaluate_performance(model,
 
 def get_metrics(test_masks_recon,test_masks_orig_recon, error_recon):
 
-    ## AUROC AOFlagger  
-#    fpr,tpr, thr = roc_curve(test_masks_recon.flatten()>0, 
-#                             error_recon.flatten())
-#    ao_auroc = auc(fpr, tpr)
-#
     # AUROC True 
     fpr,tpr, thr = roc_curve(test_masks_orig_recon.flatten()>0, 
                              error_recon.flatten())
     true_auroc = auc(fpr, tpr)
-
-    # IOU AOFlagger  
-
-#    ao_iou = iou_score(error_recon, 
-#                       test_masks_recon, 
-#                       fpr, 
-#                       tpr, 
-#                       thr)
-    # IOU True
-    #true_iou = iou_score(error_recon, 
-    #                     test_masks_orig_recon, 
-    #                     fpr, 
-    #                     tpr, 
-    #                     thr)
-
-    # AUPRC AOFlagger  
-#    precision, recall, thresholds = precision_recall_curve(test_masks_recon.flatten()>0, 
-#                                                           error_recon.flatten())
-#
-#    ao_auprc = auc(recall, precision)
 
     # AUPRC True 
     precision, recall, thresholds = precision_recall_curve(test_masks_orig_recon.flatten()>0, 
@@ -293,46 +268,8 @@ def get_metrics(test_masks_recon,test_masks_orig_recon, error_recon):
     f1_scores = 2*recall*precision/(recall+precision)
     true_f1 = np.max(f1_scores)
 
-    #true_f1 = _f1_score(error_recon, 
-    #                    test_masks_orig_recon, 
-    #                     precision, 
-    #                     recall, 
-    #                     thresholds)
-
-
-    #return ao_auroc, true_auroc, ao_auprc, true_auprc, ao_iou, true_iou
     return -1, true_auroc, -1, true_auprc, -1, true_f1
     
-def get_threshold(fpr,tpr,thr,flag,test_labels,error,anomaly_class):
-    """
-        Returns optimal threshold
-
-        Parameters
-        ----------
-        fpr (np.array): false positive rate
-        tpr (np.array): true positive rate
-        thr (np.array): thresholds for AUROC
-        flag (str): method of calculating threshold
-        anomaly_class (str):  name of anomalous class 
-        error (np.array): input-output
-        test_labels (np.array): ground truth labels  
-    
-        Returns
-        -------
-        thr (float32): Optimal threshold  
-    """
-    if flag == 'MD':# MD = Maximise diff
-        idx = np.argmax(tpr-fpr) 
-    if flag == 'MA': # MA = Maximise average
-        idx, temp = None, 0
-        for i,t in enumerate(thr):
-            normal_accuracy = accuracy_score(test_labels == 'non_anomalous', error < t)
-            anomalous_accuracy = accuracy_score(test_labels == anomaly_class, error > t)
-            m = np.mean([anomalous_accuracy, normal_accuracy])
-            if  m > temp:
-                idx = i
-                temp = m
-    return thr[idx]
 
 def normalise(x):
     """
@@ -373,50 +310,4 @@ def get_dists(neighbours_dist, args):
         return dists_recon
     else:
         return dists 
-
-def _f1_score(error, test_masks,precision,recall,thr):
-    """
-        Get F1 score 
-
-        Parameters
-        ----------
-        error (np.array): input-output
-        test_masks (np.array): ground truth mask 
-
-        Returns
-        -------
-        max_f1 (float32): maximum f1 score for a number of thresholds
-
-    """
-
-    #score = 0
-    #for t in tqdm(np.linspace(thr.min(), thr.max(), 50)):
-    #    thresholded = np.mean(error,axis=-1) >t
-    #    fscore = f1_score(test_masks.flatten()>0, thresholded.flatten())
-    #    if fscore > score: score = fscore
-    #return score
-    idx = np.argmax(precision + recall) 
-    thresholded = np.mean(error,axis=-1) >thr[idx]
-    fscore = f1_score(test_masks.flatten()>0, thresholded.flatten())
-    return fscore
-
-def iou_score(error, test_masks,fpr,tpr,thr):
-    """
-        Get jaccard index or IOU score
-
-        Parameters
-        ----------
-        error (np.array): input-output
-        test_masks (np.array): ground truth mask 
-
-        Returns
-        -------
-        max_iou (float32): maximum iou score for a number of thresholds
-
-    """
-
-    idx = np.argmax(tpr-fpr) 
-    thresholded = np.mean(error,axis=-1) >=thr[idx]
-    iou = jaccard_score(test_masks.flatten()>0, thresholded.flatten())
-    return iou
 

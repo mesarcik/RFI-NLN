@@ -118,63 +118,6 @@ class Discriminator_x(tf.keras.Model):
         classifier = self.dense(classifier) 
         return z,classifier 
 
-class Discriminator_z(tf.keras.Model):
-    def __init__(self,args):
-        super(Discriminator_z, self).__init__()
-        self.latent_dim = args.latent_dim
-        self.model = tf.keras.Sequential()
-        self.model.add(layers.InputLayer(input_shape=[self.latent_dim,]))
-
-        self.model.add(layers.Dense(64))
-        self.model.add(layers.LeakyReLU())
-        self.model.add(layers.Dropout(0.3))
-
-        self.model.add(layers.Dense(128))
-        self.model.add(layers.LeakyReLU())
-        self.model.add(layers.Dropout(0.3))
-
-        self.model.add(layers.Dense(256))
-        self.model.add(layers.LeakyReLU())
-        self.model.add(layers.Dropout(0.3))
-
-        self.model.add(layers.Flatten())
-        self.model.add(layers.Dense(1))
-    def call(self,x):
-        return self.model(x)
-
-class VAE(tf.keras.Model):
-    def __init__(self,args):
-        super(VAE, self).__init__()
-        self.encoder = Encoder(args)
-        self.decoder = Decoder(args)
-        self.latent_dim = args.latent_dim
-
-    @tf.function
-    def sample(self, eps=None):
-        if eps is None:
-            eps = tf.random.normal(shape=(self.latent_dim))
-        return self.decode(eps)#, apply_sigmoid=True)
-
-    def reparameterize(self, mean, logvar):
-        batch = tf.shape(mean)[0]
-        dim = tf.shape(mean)[1]
-        eps = tf.random.normal(shape=(batch, dim))
-        return mean + tf.exp(0.5 * logvar) * eps
-
-
-    def decode(self, z, apply_sigmoid=False):
-        logits = self.decoder(z)
-        if apply_sigmoid:
-            probs = tf.sigmoid(logits)
-            return probs
-        return logits
-
-    def call(self,x):
-        mean, logvar = self.encoder(x,vae=True)
-        z = self.reparameterize(mean, logvar)
-        x_hat = self.decode(z)
-        return x_hat 
-
 def Conv2D_block(input_tensor, n_filters, kernel_size = 3, batchnorm = True, stride=(1,1)):
     # first layer
     x = layers.Conv2D(filters = n_filters, 

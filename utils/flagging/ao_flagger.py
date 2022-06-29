@@ -21,8 +21,6 @@ def flag_data(data, args):
     aoflagger = aof.AOFlagger()
     if args.data == 'HERA':
         strategy = aoflagger.load_strategy_file('utils/flagging/stratergies/hera_{}.lua'.format(args.rfi_threshold))
-    elif args.data == 'HIDE':
-        strategy = aoflagger.load_strategy_file('utils/flagging/stratergies/wsrt-default-{}.lua'.format(args.rfi_threshold))
     elif args.data == 'LOFAR':
         strategy = aoflagger.load_strategy_file('utils/flagging/stratergies/lofar-default-{}.lua'.format(args.rfi_threshold))
 
