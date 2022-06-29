@@ -23,11 +23,11 @@ def infer(model, data, args, arch):
 
     if arch =='AE' or arch == 'encoder' or arch == 'DKNN':
         if arch=='encoder':
-            output = np.empty([len(data), args.latent_dim],np.float16)
+            output = np.empty([len(data), args.latent_dim],np.float32)
         elif arch=='DKNN':
-            output = np.empty([len(data), 2048], np.float16)
+            output = np.empty([len(data), 2048], np.float32)
         else:
-            output = np.empty(data.shape,dtype=np.float16)
+            output = np.empty(data.shape,dtype=np.float32)
         strt, fnnsh = 0, BATCH_SIZE
         for batch in data_tensor:
             output[strt:fnnsh,...] = model(batch,training=False).numpy() 
@@ -35,7 +35,7 @@ def infer(model, data, args, arch):
             fnnsh +=BATCH_SIZE
     
     else:
-        output = np.empty([len(data), args.latent_dim], dtype=np.float16)
+        output = np.empty([len(data), args.latent_dim], dtype=np.float32)
         strt, fnnsh = 0, BATCH_SIZE
         for batch in data_tensor:
             output[strt:fnnsh,...] = model(batch, training=False)[0].numpy() # for disc
@@ -77,7 +77,7 @@ def get_error(model_type,
     
     if ((model_type == 'AE') or 
             (model_type == 'AAE') or
-            (model_type == 'AE_SSIM') or
+            (model_type == 'AE-SSIM') or
             (model_type == 'DAE') or
             (model_type == 'VAE')):
         error = x - x_hat 
