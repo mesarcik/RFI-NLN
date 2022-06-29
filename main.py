@@ -38,6 +38,9 @@ def main():
     elif args.args.model == 'AE':
         train_ae(ae_train_dataset, ae_train_data, ae_train_labels, test_data, test_labels, test_masks, test_masks_orig, args.args)
 
+    elif args.args.model == 'AE-SSIM':
+        train_ae_ssim(ae_train_dataset, ae_train_data, ae_train_labels, test_data, test_labels, test_masks, test_masks_orig, args.args)
+
     elif args.args.model == 'DAE':
         train_dae(ae_train_dataset, ae_train_data, ae_train_labels, test_data, test_labels, test_masks, test_masks_orig,args.args)
 

@@ -98,7 +98,9 @@ def load_lofar(args):
 
     """
 
-    train_data, train_masks, test_data, test_masks = get_lofar_data('/data/mmesarcik/LOFAR/uncompressed/',args)
+    train_data, train_masks, test_data, test_masks = get_lofar_data(args)
+
+
     if args.limit is not None:
         train_indx = np.random.permutation(len(train_data))[:args.limit]
         test_indx = np.random.permutation(len(test_data))[:args.limit]
