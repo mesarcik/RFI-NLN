@@ -5,7 +5,7 @@ A repository containing the implementation of the paper entitled "Learning to de
 ## Installation 
 Install conda environment by:
 ``` 
-    conda create --name rfi python=3.7
+    conda create --name rfi python=3.9.7
 ``` 
 Run conda environment by:
 ``` 
