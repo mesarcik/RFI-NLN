@@ -1,4 +1,4 @@
-# Learning to detect RFI in radio astronomy without seeing it 
+# `RFI-NLN`: Learning to detect RFI in radio astronomy without seeing it 
 A repository containing the implementation of the paper entitled "Learning to detect RFI in radio astronomy without seeing it"
 
 
