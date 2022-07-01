@@ -1,26 +1,20 @@
-# Learning to detect radio frequency intereference in radio astronomy without seeing it 
-A repository containing the implementation of the paper entitled "Learning to detect radio frequency interference in radio astronomy without seeing it "
+# Learning to detect RFI in radio astronomy without seeing it 
+A repository containing the implementation of the paper entitled "Learning to detect RFI in radio astronomy without seeing it"
 
-**NOTE mention AOFLAGGER**
 
 ## Installation 
 Install conda environment by:
 ``` 
-    conda create --name rfi-ae python=3.7
+    conda create --name rfi python=3.7
 ``` 
 Run conda environment by:
 ``` 
-    conda activate rfi-ae 
+    conda activate rfi
 ``` 
 
 Install dependancies by running:
 ``` 
-    pip install -r dependancies
-``` 
-
-Additionally for training on a GPU run:
-``` 
-    conda install -c anaconda tensorflow-gpu=2.2.0
+    pip install -r requirements
 ``` 
 
 
@@ -31,36 +25,23 @@ Run the following to replicate the results for HERA or LOFAR
     sh experiments/run_hera.sh
 ```
 
-### Dataset [TODO] 
-You will need to download the [MVTec anomaly detection dataset](https://www.mvtec.com/company/research/datasets/mvtec-ad) and specify the its path using `-mvtec_path` command line option.
+### Dataset  
+You will need to download the [LOFAR and HERA datasets](https://zenodo.org/record/6724065) and specify the its path using `-data_path` command line option.
 
-## Training [TODO]
-Run the following: 
+## Reproduce results
+For HERA dataset run the following: 
 ```
-    python main.py -anomaly_class <0,1,2,3,4,5,6,7,8,9,bottle,cable,...> \
-                   -percentage_anomaly <float> \
-                   -limit <int> \
-                   -epochs <int> \
-                   -latent_dim <int> \
-                   -data <MNIST,FASHION_MNIST,CIFAR10,MVTEC> \
-                   -mvtec_path <str>\
-                   -neighbors <int(s)> \
-                   -algorithm <knn> \
-		   -patches <True, False> \
-		   -crop <True, False> \
-		   -rotate <True, False> \
-		   -patch_x <int> \    
-		   -patch_y <int> \    
-		   -patch_x_stride <int> \    
-		   -patch_y_stride <int> \    
-		   -crop_x <int> \    
-		   -crop_y <int> \    
+  ./experiments/run_hera.sh
 ```
-## Reporting Results [TODO]
-Run the following given the correctly generated results files:
+
+For the LOFAR dataset run the following: 
 ```
-    python report.py -data <LOFAR/HERA> -seed <filepath-seed>
+  ./experiments/run_hera.sh
 ```
+
+
+## Dependencies
+**NOTE** This project makes use of the python wrapping for AOFlagger, for detailed instructions on the installation and usage see [the AOFlagger documentation](https://aoflagger.readthedocs.io/en/latest/)
 
 ## Licensing
 Source code of RFI-AE is licensed under the MIT License.
