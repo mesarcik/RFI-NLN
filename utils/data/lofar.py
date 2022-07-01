@@ -32,4 +32,4 @@ def get_lofar_data(args, num_baselines=400):
             return  pickle.load(f)
     else:
         raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), 
-                                os.path.join(args.data_path,'joined_dataset.pickle'))
+                                os.path.join(args.data_path,'LOFAR_Full_RFI_dataset.pkl'))

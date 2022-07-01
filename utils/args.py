@@ -21,7 +21,7 @@ parser.add_argument('-epochs', metavar='-e', type=int, default=100,
                     help = 'The number of epochs for training')
 parser.add_argument('-latent_dim', metavar='-ld', type=int, default=2,
                     help = 'The latent dimension size of the AE based models')
-parser.add_argument('-alphas', metavar='-alph', type=float, nargs='+', default=[0, 0.25, 0.5, 0.75, 1.0],
+parser.add_argument('-alphas', metavar='-alph', type=float, nargs='+', default=[1.0],
                     help = 'The maximum number of neighbours for latent reconstruction')
 parser.add_argument('-neighbors', metavar='-n', type=int, nargs='+', default=[2,4,5,6,7,8,9],
                     help = 'The maximum number of neighbours for latent reconstruction')

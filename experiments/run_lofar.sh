@@ -12,7 +12,7 @@ patch=32
 
 for model in DAE RFI_NET UNET RNET
 do
-		for repeat in 1 2 3
+		for repeat in 1
 		do
 		python -u main.py -model $model\
 						  -limit $limit \
@@ -32,7 +32,7 @@ do
 						  -patch_stride_y $patch \
 						  -data LOFAR\
 						  -data_path /data/mmesarcik/LOFAR/uncompressed/\
-						  -neighbors 1 5 10 20\
+						  -neighbors 20\
 						  -algorithm knn\
 						  -seed $d$seed | tee -a lofar.log 
 		done 

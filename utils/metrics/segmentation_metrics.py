@@ -12,7 +12,6 @@ from sklearn.metrics import (roc_curve,
 from inference import infer, get_error
 from utils.data import *
 from utils.metrics import nln, get_nln_errors
-from reporting import plot_neighs
 from matplotlib import pyplot as plt
 
 import time

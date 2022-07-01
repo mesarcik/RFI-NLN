@@ -69,7 +69,7 @@ def get_error(model_type,
     
     if ((model_type == 'AE') or 
             (model_type == 'AE-SSIM') or
-            (model_type == 'DAE'))
+            (model_type == 'DAE')):
         error = x - x_hat 
 
 
