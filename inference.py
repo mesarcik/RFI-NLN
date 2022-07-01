@@ -48,10 +48,6 @@ def infer(model, data, args, arch):
 def get_error(model_type, 
               x, 
               x_hat, 
-              z=None, 
-              z_hat=None, 
-              d_x=None, 
-              d_x_hat=None, 
               ab=True,
               mean=True):
     """
@@ -62,10 +58,6 @@ def get_error(model_type,
         model_type (str) 
         x (np.array) 
         x_hat (np.array) 
-        z (optional np.array) 
-        z_hat (optional np.array) 
-        d_x (optional np.array) 
-        d_x_hat (optional np.array) 
         ab (bool) default True
         mean (bool) default True
 
@@ -76,24 +68,14 @@ def get_error(model_type,
     """
     
     if ((model_type == 'AE') or 
-            (model_type == 'AAE') or
             (model_type == 'AE-SSIM') or
-            (model_type == 'DAE') or
-            (model_type == 'VAE')):
+            (model_type == 'DAE'))
         error = x - x_hat 
 
-    elif model_type == 'DAE_disc':
-        discriminator_error  = d_x - d_x_hat
-        if abs: discriminator_error = abs(discriminator_error)
-        error = discriminator_error
 
-    elif model_type == 'GANomaly':
-        error = z- z_hat
-
-    elif model_type == 'UNET' or model_type=='RNET':
+    elif model_type == 'UNET' or model_type=='RNET' or 'RFI_NET':
         error = x_hat
 
-    #if ab:
     np.abs(error,dtype=np.float32, out=error)
 
     if mean:

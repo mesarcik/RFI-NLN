@@ -44,14 +44,6 @@ def main():
     elif args.args.model == 'DAE':
         train_dae(ae_train_dataset, ae_train_data, ae_train_labels, test_data, test_labels, test_masks, test_masks_orig,args.args)
 
-    elif args.args.model == 'AE-res':
-        train_ganomaly(ae_train_dataset, ae_train_data, ae_train_labels, test_data, test_labels, test_masks, test_masks_orig, args.args)
-
-    elif args.args.model == 'VAE':
-         train_vae(ae_train_dataset, ae_train_data, ae_train_labels, test_data, test_labels, test_masks, test_masks_orig, args.args)
-
-    elif args.args.model == 'AAE':
-         train_ae(ae_train_dataset, ae_train_data, ae_train_labels, test_data, test_labels, test_masks, test_masks_orig, args.args)
 
 if __name__ == '__main__':
     main()

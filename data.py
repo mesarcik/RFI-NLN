@@ -18,7 +18,6 @@ def load_hera(args):
 
     """
     (train_data, test_data, 
-         train_labels, test_labels, 
          train_masks, test_masks) = get_hera_data(args)
 
 
@@ -26,7 +25,6 @@ def load_hera(args):
         train_indx = np.random.permutation(len(train_data))[:args.limit]
         train_data  = train_data [train_indx]
         train_masks = train_masks[train_indx]
-        train_labels = train_labels[train_indx]
 
     test_masks_orig = copy.deepcopy(test_masks)
     if args.rfi_threshold is not None:
@@ -70,10 +68,6 @@ def load_hera(args):
 
         ae_train_data  = train_data[np.invert(np.any(train_masks, axis=(1,2,3)))]
         ae_train_labels = train_labels[np.invert(np.any(train_masks, axis=(1,2,3)))]
-
-    #ae_train_data = ae_train_data.astype(np.float16) 
-    #train_data = train_data.astype(np.float16) 
-    #test_data = test_data.astype(np.float16) 
 
     unet_train_dataset = tf.data.Dataset.from_tensor_slices(train_data).shuffle(BUFFER_SIZE).batch(BATCH_SIZE)
     ae_train_dataset = tf.data.Dataset.from_tensor_slices(ae_train_data).shuffle(BUFFER_SIZE).batch(BATCH_SIZE)
@@ -147,11 +141,9 @@ def load_lofar(args):
         test_labels[np.invert(np.any(test_masks, axis=(1,2,3)))] = 'normal'
 
         ae_train_data  = train_data[np.invert(np.any(train_masks, axis=(1,2,3)))]
-        ae_train_labels = train_labels[np.invert(np.any(train_masks, axis=(1,2,3)))]
 
     unet_train_dataset = tf.data.Dataset.from_tensor_slices(train_data).shuffle(BUFFER_SIZE,seed=42).batch(BATCH_SIZE)
     ae_train_dataset = tf.data.Dataset.from_tensor_slices(ae_train_data).shuffle(BUFFER_SIZE,seed=42).batch(BATCH_SIZE)
-
 
     return (unet_train_dataset,
             train_data, 
