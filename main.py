@@ -1,4 +1,5 @@
 import numpy as np 
+import faiss
 import tensorflow as tf
 from data import *
 from utils import args 
