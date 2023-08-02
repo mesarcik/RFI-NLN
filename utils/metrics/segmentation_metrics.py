@@ -55,6 +55,27 @@ def evaluate_performance(model,
     test_masks_recon = patches.reconstruct(test_masks, args)
     test_masks_orig_recon = patches.reconstruct(test_masks_orig, args)
 
+    if model_type == 'AOFlagger':
+        (ao_auroc, true_auroc, 
+         ao_auprc, true_auprc,      
+         ao_f1, true_f1) = get_metrics(test_masks_recon, 
+                                                   test_masks_orig_recon, 
+                                                   test_masks_recon)
+        return (ao_auroc, true_auroc, 
+         ao_auprc, true_auprc,      
+         ao_f1, true_f1,
+         -1, -1, 
+         -1, -1,      
+         -1, -1,
+         -1, -1, 
+         -1, -1,      
+         -1, -1,
+         [-1], [-1], 
+         [-1], [-1],      
+         [-1], [-1])
+
+
+
     if model_type =='UNET' or model_type =='RNET' or model_type =='RFI_NET':
         x_hat = infer(model[0], test_images, args, 'AE')
         x_hat_recon = patches.reconstruct(x_hat, args)

@@ -10,7 +10,7 @@ ld=8
 patch=32
 threshold=10
 
-for model in DAE UNET RNET RFI_NET
+for model in DAE UNET RNET RFI_NET AOFlagger
 do
 		for repeat in 1 2 3 
 		do

@@ -45,6 +45,10 @@ def main():
     elif args.args.model == 'DAE':
         train_dae(ae_train_dataset, ae_train_data, ae_train_labels, test_data, test_labels, test_masks, test_masks_orig,args.args)
 
+    elif args.args.model == 'AOFlagger':
+        end_routine(train_data, test_data, test_data, test_masks, test_masks_orig, None, 'AOFlagger', args.args)
+
+
 
 if __name__ == '__main__':
     main()

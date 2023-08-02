@@ -13,6 +13,7 @@ from astropy import units
 import hera_sim
 from hera_sim import Simulator, DATA_PATH, utils
 from uvtools.plot import labeled_waterfall
+from sklearn.model_selection import train_test_split
 
 station_models = ['HERA_H1C_RFI_STATIONS.npy', 
                   'HERA_H2C_RFI_STATIONS.npy']
@@ -89,6 +90,16 @@ def simulate(id_rfis):
     seed="once",
     )
 
+    sim.add(
+        "pntsrc_foreground",
+        nsrcs=10,  # Just a few sources
+        Smin=0.01,
+        Smax=5,  # That are bright
+        component_name="bright_sources",
+        seed="once",
+    )
+
+
     #########################################################################################
     #########################################################################################
     #########################################################################################
@@ -97,7 +108,7 @@ def simulate(id_rfis):
     if 'rfi_stations' in id_rfis:
         sim.add(
             "rfi_stations",
-            stations="/home/mmesarcik/anaconda3/envs/hera/lib/python3.7/site-packages/hera_sim/data/{}".format(station_models[
+            stations="/home/mmesarcik/anaconda3/envs/rfi/lib/python3.9/site-packages/hera_sim/data/{}".format(station_models[
                                                                                                                 np.random.randint(0,2)]),
             component_name="rfi_stations",
             seed="once",
@@ -242,10 +253,11 @@ def main():
                 st=en
                 en+=2*baselines
 
-            f_name = '/home/mmesarcik/data/HERA/HERA_{}_{}.pkl'.format(datetime.datetime.now().strftime("%d-%m-%Y"),'-'.join(subset))
+            train_data, test_data, train_masks, test_masks= train_test_split(data, masks, test_size=0.25)
+            f_name = '/data/mmesarcik/HERA/HERA_{}_{}.pkl'.format(datetime.datetime.now().strftime("%d-%m-%Y"),'-'.join(subset))
             print('{} saved!'.format(f_name))
 
-            pickle.dump([data,labels,masks],open(f_name, 'wb'), protocol=4)
+            pickle.dump([train_data,train_masks,test_data, test_masks],open(f_name, 'wb'), protocol=4)
 
 if __name__ == '__main__':
     main()

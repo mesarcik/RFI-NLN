@@ -8,7 +8,7 @@ from coolname import generate_slug as new_name
 parser = argparse.ArgumentParser(description='Train generative anomaly detection models')
 
 parser.add_argument('-model',metavar='-m', type=str, default='AE',
-                    choices={'UNET','AE', 'DAE', 'DKNN','RNET', 'RFI_NET', 'AE-SSIM'}, help = 'Which model to train and evaluate')
+                    choices={'UNET','AE', 'DAE', 'DKNN','RNET', 'RFI_NET', 'AE-SSIM', 'AOFlagger'}, help = 'Which model to train and evaluate')
 parser.add_argument('-limit',metavar='-l', type=str, default='None',
                     help = 'Limit on the number of samples in training data ')
 parser.add_argument('-anomaly_class',metavar='-a', type=str,  default=2,
@@ -67,6 +67,9 @@ parser.add_argument('-clip', metavar='-clip', type=float, default=None,
 args = parser.parse_args()
 args.model_name = new_name()
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = args.debug
+
+if args.rfi_threshold == 'None':
+    args.rfi_threshold = None
 
 if args.data == 'MNIST' or args.data == 'FASHION_MNIST':
     args.input_shape =(28,28,1)
