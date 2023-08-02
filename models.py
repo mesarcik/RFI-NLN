@@ -4,6 +4,37 @@ from tensorflow.keras import layers
 from model_config import n_layers,n_filters
 tf.keras.backend.set_floatx('float32')
 
+def Conv2D_block(input_tensor, n_filters, kernel_size = 3, batchnorm = True, stride=(1,1)):
+    # first layer
+    x = layers.Conv2D(filters = n_filters, 
+                      kernel_size = (kernel_size, kernel_size),\
+                      kernel_initializer = 'he_normal', 
+                      strides=stride,
+                      padding = 'same')(input_tensor)
+    if batchnorm:
+        x = layers.BatchNormalization()(x)
+    x = layers.Activation('relu')(x)
+    
+    return x
+
+def MLP(args, n_filters = 16, dropout = 0.05, batchnorm = True):
+    # Contracting Path
+    input_data = tf.keras.Input(args.input_shape,name='data') 
+    c1 = Conv2D_block(input_data, n_filters * 1, kernel_size = 3, batchnorm = batchnorm, stride=(2,2))
+    p1 = layers.Dropout(dropout)(c1)
+
+    c3 = Conv2D_block(p1, n_filters = n_filters * 16, kernel_size = 3, stride=(2,2), batchnorm = batchnorm)
+    
+    u9 = layers.Conv2DTranspose(n_filters * 1, (3, 3), strides = (2, 2), padding = 'same')(c3)
+    u9 = layers.concatenate([u9, c1])
+    u9 = layers.Dropout(dropout)(u9)
+    u9 = layers.UpSampling2D((2,2))(u9)
+    c9 = Conv2D_block(u9, n_filters * 1, kernel_size = 3, batchnorm = batchnorm)
+    
+    outputs = layers.Conv2D(1, (1, 1), activation='sigmoid')(c9)
+    model = tf.keras.Model(inputs=[input_data], outputs=[outputs])
+    return model
+
 class Encoder(tf.keras.layers.Layer):
     def __init__(self,args):
         super(Encoder, self).__init__()
@@ -117,19 +148,6 @@ class Discriminator_x(tf.keras.Model):
         classifier = self.flatten(z) 
         classifier = self.dense(classifier) 
         return z,classifier 
-
-def Conv2D_block(input_tensor, n_filters, kernel_size = 3, batchnorm = True, stride=(1,1)):
-    # first layer
-    x = layers.Conv2D(filters = n_filters, 
-                      kernel_size = (kernel_size, kernel_size),\
-                      kernel_initializer = 'he_normal', 
-                      strides=stride,
-                      padding = 'same')(input_tensor)
-    if batchnorm:
-        x = layers.BatchNormalization()(x)
-    x = layers.Activation('relu')(x)
-    
-    return x
 
 def UNET(args, n_filters = 16, dropout = 0.05, batchnorm = True):
     # Contracting Path

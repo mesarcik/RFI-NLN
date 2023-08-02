@@ -182,14 +182,17 @@ def evaluate_performance(model,
                                                                         neighbour,
                                                                         -1)
     nln_error = get_nln_errors(model,
-                               'AE',
-                               z_query,
-                               z,
-                               test_images,
-                               x_hat_train,
-                               neighbours_idx,
-                               neighbour_mask,
-                               args)
+                       'AE',
+                       z_query,
+                       z,
+                       test_images,
+                       x_hat_train,
+                       neighbours_idx,
+                       neighbour_mask,
+                       args)
+    if model == 'fine_tune':
+        nln_error = infer(model[1], nln_error, args, 'AE')
+
 
     if args.patches:
         if nln_error.ndim ==4:

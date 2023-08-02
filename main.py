@@ -48,6 +48,9 @@ def main():
     elif args.args.model == 'AOFlagger':
         end_routine(train_data, test_data, test_data, test_masks, test_masks_orig, None, 'AOFlagger', args.args)
 
+    elif args.args.model == 'fine_tune':
+        train_fine_tune(unet_train_dataset, ae_train_data, train_data, train_labels, train_masks, test_data, test_labels, test_masks, test_masks_orig, args.args)
+
 
 
 if __name__ == '__main__':
