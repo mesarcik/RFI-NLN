@@ -190,7 +190,7 @@ def evaluate_performance(model,
                        neighbours_idx,
                        neighbour_mask,
                        args)
-    if model == 'fine_tune':
+    if args.model == 'fine_tune':
         nln_error = infer(model[1], nln_error, args, 'AE')
 
 
@@ -222,7 +222,7 @@ def evaluate_performance(model,
     combined_ao_aurocs, combined_ao_auprcs, combined_ao_f1s= [], [],[]
     for alpha in args.alphas:
         if args.data == 'LOFAR':
-            combined_recon =  np.clip(nln_error_recon,nln_error_recon.mean()+nln_error_recon.std()*5,1.0)*np.array([d > np.percentile(d,66) for d in dists_recon])#
+            combined_recon =  nln_error_recon*np.array([d > np.percentile(d,66) for d in dists_recon])#
         elif args.data == 'HERA':
             combined_recon =  nln_error_recon*np.array([d > np.percentile(d,10) for d in dists_recon])#
 
