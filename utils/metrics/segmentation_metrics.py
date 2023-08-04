@@ -222,7 +222,7 @@ def evaluate_performance(model,
     combined_ao_aurocs, combined_ao_auprcs, combined_ao_f1s= [], [],[]
     for alpha in args.alphas:
         if args.data == 'LOFAR':
-            combined_recon =  nln_error_recon*np.array([d > np.percentile(d,66) for d in dists_recon])#
+            combined_recon =  nln_error_recon*np.array([d > np.percentile(d,70) for d in dists_recon])#
         elif args.data == 'HERA':
             combined_recon =  nln_error_recon*np.array([d > np.percentile(d,10) for d in dists_recon])#
 
